@@ -1,0 +1,121 @@
+---
+title: "Working in RStudio"
+subtitle: "Data Skills for the Digital World: Week 1" 
+author: "Jason Grafmiller<br>[j.grafmiller@bham.ac.uk](mailto:j.grafmiller@bham.ac.uk)"
+date: "Last updated: `r format(Sys.Date(), '%d %B %Y')`"
+format:
+  html: 
+    toc: true
+    toc-location: left
+    theme: 
+      light: flatly
+      dark: darkly
+    mainfont: 'Roboto'
+    fontsize: 100%
+    df-print: paged
+    code-copy: true
+    code-tools:
+      source: true
+      toggle: true
+      caption: "code"
+    css: "styles/custom_bib.css"
+    include-in-header: "styles/roboto_serif.html"
+    include-after-body: "styles/footer.html"
+    embed-resources: true
+knitr:
+  opts_chunk: 
+    comment: "#>"
+    tidy: styler
+execute:
+  echo: true
+  warning: false
+  message: false
+  cache: false
+tbl-cap-location: top
+fig-cap-location: bottom
+filters:
+  - lightbox
+lightbox: auto
+bibliography: [references.bib, data_skills_refs.bib]
+link-citations: true
+csl: unified-style-linguistics.csl
+---
+
+# RStudio elements
+
+The RStudio IDE can be a lot to take in at first. But we will focus on only some core elements, and it should not take long to get the hang of it. RStudio is designed to help make coding in R more efficient, and to use it effectively just takes some practice. If you can use tools like MS Word or Powerpoint, you can learn to use RStudio. 
+
+You'll notice that there are a number of **drop-down menus** at the top, which provide options that allow you to do some things without writing out lines of code. The goal will be to get comfortable doing as much as you can with code, but don't be afraid to use whatever method is easiest to get the job done. By design, the menu options are limited in comparison to what you can code yourself, but they may feel more user-friendly for those not used to coding, and can provide useful shortcuts.
+
+The RStudio user interface has 4 primary panes (@fig-rstudio).
+
+![RStudio pane layout](../images/rstudio-panes-labeled.jpeg){#fig-rstudio fig-align="center" fig-alt="The default layout of the RStudio panes."}
+
+We'll look at these in more detail later, but in a nutshell:
+
+- **Source pane**, where you can view and edit various code-related files, such as `.R`, `.qmd`, `.py`. This is where you write in the code you want R to run. I like to think of this as the "recipe" pane, where we will put together all the instructions for R to do stuff
+- **Console pane**, where code will be executed. If the source pane is where we write our recipes, the console is where the cooking happens. You can type code directly in the console as you do in the text editor, as well as see output.
+- **Environment pane**, containing the **Environment**, **History**, **Connections**, **Build**, and **Tutorial** tabs. The Environment contains all the datasets, functions and variable that have been loaded into the R session. These are like your "ingredients" in our cooking metaphor. 
+- **Output pane**, containing the **Files**, **Plots**, **Packages**, **Help**, **Viewer**, and **Presentation** tabs.
+
+Full details of RStudio's layout can be found here: <https://docs.posit.co/ide/user/ide/guide/ui/ui-panes.html#console>
+
+::: {.callout-tip}
+# Customising your pane layout
+
+RStudio panes can be customised going to "Tools" > "Global Options..." and clicking on "Pane Layout". I prefer to set my Source pane and Console panes on opposite sides, so I have enough room to write code in the editor while still being able to see it run in the console. There is *a lot* you can do to make your layout suit your style: [Customizing RStudio](https://support.posit.co/hc/en-us/articles/200549016-Customizing-the-RStudio-IDE)
+:::
+
+
+# Installing and loading packages {#sec-packages}
+
+To get the most out of R we'll have to install additional **packages**. Packages are collections of functions and datasets that have been created by users to add specific functionality to R. 
+
+The directories in R where packages are stored are called **libraries**. And to use the data or functions included in a package you must first **install** the package from either an online repository (most common), or from a file on your local computer. The official repository of R packages is [CRAN](https://cran.r-project.org/) but many users also develop and host packages on GitHub. Currently there are many thousands of packages available packages on CRAN, and many more hosted elsewhere. All of these are free for anyone to use. 
+
+The basic R installation comes with a set of **standard (or base) packages** which are available when you start R. Base packages contain the basic functions that allow R to work, and enable standard statistical and graphical functions on datasets. Many functions for mathematical calculations or manipulating text are available in the base installation. But there are many more that we will need to install ourselves.
+
+## Installing packages with the console {.unnumbered}
+
+To install an R package, go to the console and type at the command line:
+
+```{r}
+#| eval: false
+install.packages("thepackagename")
+```
+
+R will download the package from CRAN, so you'll need to be connected to the internet. Note that the package name is in quotes. You can install multiple packages by enclosing the packages in the `c()` function with the names separated by a comma.
+
+```{r}
+#| eval: false
+install.packages(c("package1", "package2", "package3"))
+```
+
+When you install a package you will see some printout in the console, and you may get a message something like `also installing the dependencies 'packageA', 'packageB`. Don't worry! This is normal. It's telling you that the package you are currently trying to install uses data or functions that are contained in yet another package, which also must be installed. So your package is *depenedent* on those other packages, and R is kindly installing these dependencies for you :)
+
+## Installing packages with RStudio {.unnumbered}
+
+Alternatively, you can go to the "Tools" menu in RStudio and click "Install packages..." to open up the window below:
+
+![Install packages window](../images/install_packages.png){#fig-ins-pkgs fig-align="center" fig-alt="Install packages window"}
+
+Then just type the name(s) of the package(s) you want to install and click "Install". You can do several at a time if you separate the names with a comma.
+
+## Loading packages {.unnumbered}
+
+There is one more crucial distinction that you need to understand, which is the difference between having a package **installed** on your computer, and having a package **loaded** in an R session. You only need to install a package to your computer once, but you will need to load it whenever you want to use it in any given R session.
+
+So, once you have a package installed, you must then **load** it into your workspace to use in your current R session. To load a package you use the `library()` function.
+
+```{r}
+#| eval: false
+library("thepackagename")
+library(thepackagename) # this works too
+```
+
+A couple things to note:
+
+1. The terms *package* and *library* are often used synonymously, so try to not to get confused. You install 'packages' but load 'libraries' (I don't know why they designed it this way...)
+2. Remember: **You only need to install a package once**. You can restart R and it will still be installed. **But you must** ***load*** **a package every time you restart R**.
+
+
