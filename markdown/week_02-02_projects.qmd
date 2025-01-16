@@ -88,7 +88,7 @@ Here I've simplified the explanation in Wickham et al. [Chapter 6](https://r4ds.
 
 To create a new project in the RStudio IDE, use the "File" > "New Project..." and follow these steps:
 
-![From Wickham et al.](../_images/new-project.png)
+![From Wickham et al.](../images/new-project.png)
 
 To create a new project: (top) first click "New Directory", then (middle) click "New Project", then (bottom) fill in the directory (project) name, choose a good subdirectory for its home and click "Create Project". Call your project something usefull, e.g. `data_skills_module` and think carefully about which subdirectory you put the project in. You want to be able to find it when you need it. This will give you a new RStudio project just for this module.
 

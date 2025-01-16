@@ -82,7 +82,7 @@ Good file names should:
 2. **Be Human Readable.** it should be easy to figure out what something is, based on its name
 3. **Follow default ordering conventions**. Generally this means put something numeric first, use ISO 8601 date standard, and pad numbers with zeros (e.g. order months from `01`, `02`, ..., `12` **not** `1`, `2`, ...).
 
-!["ISO-8601" <https://xkcd.com/1179/>](../_images/iso_8601_2x.png){width="50%"}
+!["ISO-8601" <https://xkcd.com/1179/>](../images/iso_8601_2x.png){width="50%"}
 
 You can find a more detailed discussion of these in [Wickham et al. 2023: 6.1.3](https://r4ds.hadley.nz/workflow-scripts#saving-and-naming).
 
@@ -97,7 +97,7 @@ For this course we'll be following the **tidy** approach to R syntax developed b
 
 > an opinionated collection of R packages designed for data science. All packages share an underlying design philosophy, grammar, and data structures.
 
-![The tidyverse](../_images/tidyverse.png){width=75%}
+![The tidyverse](../images/tidyverse.png){width=75%}
 
 Most of these were originally developed by Hadley Wickham himself, but they've been expanded upon by a number of other contributors. The advantages of the tidyverse include functions with a consistent naming style and syntax that is transparent and easy to learn and use. They are all designed to work with tidy data, which offers a parsimonious approach to the development of data science tools, and the possibility of greater productivity and learnability.
 

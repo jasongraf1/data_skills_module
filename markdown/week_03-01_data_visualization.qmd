@@ -62,7 +62,7 @@ At its core, the grammar of graphics emphasizes that any chart or graph can be c
 
 A visual summary of the concept looks like this:
 
-![Seven layers of the grammar of graphics. Source: <https://blog.gramener.com/grammar-of-graphics-data-stories/amp/>](../_images/grammar_of_graphis.png){#fig-gg fig-alt="source: https://blog.gramener.com/grammar-of-graphics-data-stories/amp/"}
+![Seven layers of the grammar of graphics. Source: <https://blog.gramener.com/grammar-of-graphics-data-stories/amp/>](../images/grammar_of_graphis.png){#fig-gg fig-alt="source: https://blog.gramener.com/grammar-of-graphics-data-stories/amp/"}
 
  This approach is flexible and systematic, and it provides a clear and consistent way to think about how data becomes a visual representation. Instead of memorizing specific chart types, we can focus on how the components work together, fostering creativity and understanding of visualization design. `{ggplot2}` has arguably become *the* standard approach for creating graphs and charts in R (but it is certainly not the only approach), and I prefer it greatly to other tools I've used in R and Python.
 

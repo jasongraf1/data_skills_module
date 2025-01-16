@@ -45,7 +45,7 @@ csl: unified-style-linguistics.csl
 
 One of the most essential aspects of data management is understanding how files are organized on your computer (or other systems). It helps to recall the basic metaphor that the term *file* is intended to evoke---that a computer "file" is like a paper document that can be stored as a file in a folder in a file cabinet.
 
-![How filing systems used to work](../_images/blue-filing-cabinet.jpg){#fig-rstudio fig-align="left" fig-alt="Filing cabinet" width="60%"}
+![How filing systems used to work](../images/blue-filing-cabinet.jpg){#fig-rstudio fig-align="left" fig-alt="Filing cabinet" width="60%"}
 
 A computer file contains information on its contents, instructions needed to read them, and where it is stored. Since computers are not limited to physical space, we can in principle have any number of files within a folder, folders within bigger folders, and so on. Folders are also referred to as **directories**, and I'll use these terms interchangeably. Every file sits inside some directory. A directory within another directory is often called a **subdirectory** (subfolder). 
 
@@ -61,7 +61,7 @@ The total organisation of all the files and directories is what we call the **fi
 #| echo: false
 #| fig-width: 5
 #| fig-height: 4
-knitr::include_graphics("../_images/folder_structure.png")
+knitr::include_graphics("../images/folder_structure.png")
 ```
 
 The **root directory** is the highest-level directory of the file system structure. Its like the file cabinet: nothing exists outside it. In Mac OS, Linux, and other UNIX-like operating systems, the root is represented with a simple forward slash (`/`). In Windows, the root is represented by the drive name (a capital letter) and a backslash, e.g. `C:\`. All files and other directories, also referred to as *folders*, are located below the root. Directories that are located inside other directories are called subdirectories (subfolders). Directories contain a list of the file names and/or subdirectories for each file in the directory.

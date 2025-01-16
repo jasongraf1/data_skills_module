@@ -444,7 +444,7 @@ Which do you think is more effective, and why?
 
 Box and whisker plots (otherwise known as boxplots), are graphs summarising the distribution of a set of values. The shape of the boxplot shows how the data is distributed and it also shows any outliers. 
 
-![Explanation of a boxplot](../_images/boxplot-interpretation.png){fig-alt="source: https://datatab.net/tutorial/box-plot"}
+![Explanation of a boxplot](../images/boxplot-interpretation.png){fig-alt="source: https://datatab.net/tutorial/box-plot"}
 
 Boxplots are a useful way to compare different sets of data as you can draw more than one boxplot per graph. These can be displayed alongside a number line, horizontally or vertically.
 
