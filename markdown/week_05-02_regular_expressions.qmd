@@ -1,0 +1,275 @@
+---
+title: "Regular expressions (Regex)"
+subtitle: "Data Skills for the Digital World: Week 5" 
+author: "Jason Grafmiller<br>[j.grafmiller@bham.ac.uk](mailto:j.grafmiller@bham.ac.uk)"
+date: "Last updated: `r format(Sys.Date(), '%d %B %Y')`"
+format:
+  html: 
+    toc: true
+    toc-location: left
+    theme: 
+      light: flatly
+      dark: darkly
+    mainfont: 'Roboto'
+    fontsize: 100%
+    df-print: paged
+    code-copy: true
+    code-tools:
+      source: true
+      toggle: true
+      caption: "code"
+    css: "styles/custom_bib.css"
+    include-in-header: "styles/roboto_serif.html"
+    include-after-body: "styles/footer.html"
+    embed-resources: true
+knitr:
+  opts_chunk: 
+    # cache.path: "../cache/"
+    # fig.path: "../figures/"
+    comment: "#>"
+    tidy: styler
+execute:
+  echo: true
+  warning: false
+  message: false
+  cache: false
+tbl-cap-location: top
+fig-cap-location: bottom
+filters:
+  - lightbox
+lightbox: auto
+bibliography: [references.bib, data_skills_refs.bib]
+link-citations: true
+csl: unified-style-linguistics.csl
+---
+
+# What are Regular Expressions (regex) {#sec-regex}
+
+Regular expressions (regex) are sequences of characters that form a search pattern. They are used to match strings of text, such as particular characters, words, or patterns of characters. Regex is incredibly versatile and is used extensively when working with textual data, file names, etc. 
+
+Regex is built on the principle of **pattern matching**: they provide a concise and flexible way to identify strings or substrings based on rules defined by sequences of characters and symbols. Regex can be thought of as a mini-language used to describe patterns. Each pattern you write is like a formula that specifies:
+
+- What characters to match
+- Where the match should occur in a string
+- How to handle variations in the data
+
+A regex pattern is constructed from literal characters and special operators (like `*`, `+`, `[ ]`, etc.). These components work together to form complex patterns. The power of regex comes from its ability to match exact patterns (specific substrings), to describe **variable patterns** (patterns that allow some degree of variation), and to work with quantifiers to specify how many occurrences of a pattern are allowed.
+
+For example:
+
+- `dog` specifies a literal match for the string `"dog"`.
+- `[a-z]` specifies a set of valid characters, here any lowercase letters from `a` to `z`.
+- `\d+` specifies one or more numeric digits.
+
+Regex allows you to accomplish in a few lines what might take dozens of lines in manual (exact) string manipulation code.
+
+Let's start by loading our libraries and `baby_names` dataset.
+
+```{r}
+library(here) # for file paths
+library(tidyverse)
+
+baby_names <- here("data", "baby_names_top100_eng_wales.csv") |> 
+    read_csv()
+```
+
+Check it again
+
+```{r}
+glimpse(baby_names)
+```
+
+Base R has a number of functions for workign with regexes, but we'll continue with `{stringr}` because its function names are much more transparent (<https://stringr.tidyverse.org/>).
+
+All of the functions we've already seen work with regex. The trick is learning the symbols and syntax of regular expressions.
+
+
+## Matching and detecting patterns
+
+Let's filter our names by whether they have "g" in them.
+
+```{r}
+baby_names |> 
+  filter(str_detect(name, "g"))
+```
+
+Note the case: a name like "Grace" or "Gabrielle" is not included in this match. This is becuase we are looking for the *literal* string lowercase "g". If we try uppercase `"G"` we get slightly different results. Now names like "Kayleigh" won't match. 
+
+```{r}
+baby_names |> 
+  filter(str_detect(name, "G"))
+```
+
+The neat thing about regex is that we can search in strings for **variables**. So let's look at names containing either `"g"` or `"G"` by using `[gG]`. This tells it to look for single characters that match any of the individual characters inside the `[ ]`, i.e. "g" or "G".
+
+```{r}
+baby_names |> 
+  filter(str_detect(name, "[gG]"))
+```
+
+Let's filter baby names by whether they *end* in a vowel ("a", "e", "i", "o", "u"). We can do this with a combination of **anchors** `^` (start of string) and `$` (end of string) and our brackets `[aeiou]`. The search string `"[aeiou]$"` says: match any of the individual characters inside the `[aeiou]` that occur immediately before the end of the string `$`.
+
+```{r}
+# only names ending in a,e,i,o, or u
+baby_names |> 
+  filter(str_detect(name, "[aeiou]$")) 
+```
+
+Here's another search for names matching "Jason", "Joseph", "Joshua", "Jasmine", etc.
+
+```{r}
+# only names with "Jas" or "Jos"
+baby_names |> 
+  filter(str_detect(name, "J[ao]s")) 
+```
+
+You can also match by elimination by including the `^` *inside* the brackets. So suppose I want all names starting with "J" that are not followed by "a". I could specify all the other vowels (`[eiou]`), or I could just ask for "not 'a'" like so:
+
+```{r}
+baby_names |> 
+  filter(str_detect(name, "J[^a]")) 
+```
+
+## Replacing and removing
+
+The `str_replace()` and `str_remove()` functions work the same as before.
+
+```{r}
+hobbit <- "In a hole in the ground there lived a hobbit."
+
+# remplace all vowels with "@"
+str_replace_all(hobbit, "[aeiou]", "@")
+```
+
+
+# Special characters
+
+There are many special characters that are used in regex. For example, the `.` matches any single character, including digits, spaces, and punctuation.
+
+This is useful for when we're not sure what could be there.
+
+```{r}
+baby_names |> 
+  filter(str_detect(name, "J.s")) 
+```
+
+
+| **Character** | **Special Meaning** | **Example (Unescaped)** |
+|---|---|---|
+| `.` | Matches any single character | `c.t` matches   "cat", "cut" |
+| `^` | Matches the start of a string | `^Hello` matches   "Hello" at the start |
+| `$` | Matches the end of a string | `world$` matches   "world" at the end |
+| `*` | Matches 0 or more of the preceding   item | `ca*t` matches   "ct", "cat", "caaat" |
+| `+` | Matches 1 or more of the preceding   item | `ca+t` matches   "cat", "caaat" |
+| `?` | Matches 0 or 1 of the preceding   item | `colou?r`   matches "color" or "colour" |
+| `{ }` | Specifies a range of occurrences | `a{2,4}` matches   "aa", "aaa", "aaaa" |
+| `[ ]` | Denotes a character set or range | `[abc]` matches   "a", "b", or "c" |
+| `( )` | Groups patterns or creates capture   groups | `(abc)+` matches   "abcabc" |
+| `|` | Matches patterns on either side | `abc|xyz` matches either "abc" or "xyz" |
+| `\\` | Escape character | `\\.` matches a literal ". |
+| `\\w` | Matches any word character | `\\w` matches "a", "h" |
+| `\\d` | Matches any digit character | `\\d` matches "1", "8" |
+| `\\s` | Matches any space character | `\\s` matches " "|
+
+: Some useful regex characters to know. {#tbl-outline .striped .hover tbl-colwidths="[20,40,40]"}
+
+
+## Escaping special characters
+
+**Escape characters** allow you to include characters like quotes, backslashes, or other reserved symbols in your strings or patterns without causing syntax errors or undesired behavior. For instance, `.` matches any character, but `\\.` matches a literal stop ".". `\\d `matches any digit, while `d` alone matches the literal character "d".
+
+Use `\\` to escape special characters.
+
+```{r}
+# Detect strings containing a literal period with "\\."
+strings_with_period <- c("file.txt", "no_period")
+str_detect(strings_with_period, "\\.")
+```
+
+Escape characters are crucial for managing text and patterns effectively, especially when working with reserved or special symbols. We'll see more on this later.
+
+## Quantifiers
+
+Quantifiers in regular expressions specify how many times a particular pattern should match. They allow you to control the number of occurrences of characters, groups, or other patterns. 
+
+
+
+Here are the main types of quantifiers:
+
+- `*` (Zero or more times): Matches the preceding element zero or more times.
+    + Pattern: `a*`
+    + Matches: "", `"a"`, "aa", "aaa", etc.
+- `+` (One or more times): Matches the preceding element one or more timess.
+    + Pattern: `a+`
+    + Matches: "a", "aa", "aaa", but not "".
+- `?` (Zero or one time): Matches the preceding element zero or one time.
+    + Pattern: `a?`
+    + Matches: "", "a".
+- `{n}` (Exactly n times): Matches the preceding element exactly n times.
+    + Pattern: `a{3}`
+    + Matches: "aaa", but not "aa" or "aaaa".
+- `{n,}` (At least n times): Matches the preceding element at least n times.
+    + Pattern: `a{2,}`
+    + Matches: "aa", "aaa", "aaaa", etc.
+- `{n,m}` (Between n and m times): Matches the preceding element at least n times but no more than m times.
+    + Pattern: `a{2,4}`
+    + Matches: "aa", "aaa", "aaaa", but **not** "a" or "aaaaa".
+
+Let's looks for names with double "n"s: 
+
+```{r}
+baby_names |> 
+  filter(str_detect(name, "n{2}")) 
+```
+
+This can be used in combination with other variables. So suppose we have some inconsistencies in case like so:
+
+```{r}
+my_names <- c("Aaron", "AAron", "Jason", "GRAce")
+```
+
+We can find names with repeated uppercase letters. `"[A-Z]"` matches an uppercase letter, and `{2,}` looks for 2 or more of those.
+
+```{r}
+str_subset(my_names, "[A-Z]{2,}")
+```
+
+These may seem like simple examples
+
+
+## Groups
+
+The `[ ]` operator works with single characters, but we can search for entire groups of characters with `( )`. We can include options by separating the groups with `|`.
+
+For the heck of it, let's look at all names beginning with either "Mar" or "So", and names *ending* with "na". 
+
+```{r}
+baby_names |> 
+  filter(str_detect(name, "Mar|So|na$")) 
+```
+
+
+Groups can be used to **capture** matches, which can then be referred to in the same regex. Suppose we want to look at names that have double letters of any kind. We don't know exactly which letters may be doubled, so we want to be as general as possible. To do this we might use a regex like so.
+
+```{r}
+baby_names |> 
+  filter(str_detect(name, "(\\w)\\1")) 
+```
+
+Let's break this down. There are two main parts of the above regex:
+
+- The `\\w` matches any word character. The parentheses `( )` around it create a **capture group**, storing the matched character.
+- The `\\1` is a **backreference** to the first (only in this case) capture group. It matches the same character that was captured in `(\\w)`.
+
+# More practice with regular
+
+
+
+# Exercises
+
+1. Create a vector of strings containing random numbers and text. Use regex to detect which strings contain numbers.
+2. Write a regex pattern to identify strings that start with a capital letter.
+3. Find strings that end with a punctuation mark (e.g., `.` or `!`).
+4. Replace all occurrences of multiple spaces with a single space in a messy text string.
+5. Use regex to extract all numbers from a string containing both text and numbers.
+

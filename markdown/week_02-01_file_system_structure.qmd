@@ -1,0 +1,114 @@
+---
+title: "File System Structure"
+subtitle: "Data Skills for the Digital World: Week 2" 
+author: "Jason Grafmiller<br>[j.grafmiller@bham.ac.uk](mailto:j.grafmiller@bham.ac.uk)"
+date: "Last updated: `r format(Sys.Date(), '%d %B %Y')`"
+format:
+  html: 
+    toc: true
+    toc-location: left
+    theme: 
+      light: flatly
+      dark: darkly
+    mainfont: 'Roboto'
+    fontsize: 100%
+    df-print: paged
+    code-copy: true
+    code-tools:
+      source: true
+      toggle: true
+      caption: "code"
+    css: "styles/custom_bib.css"
+    include-in-header: "styles/roboto_serif.html"
+    include-after-body: "styles/footer.html"
+    embed-resources: true
+knitr:
+  opts_chunk: 
+    # cache.path: "../cache/"
+    # fig.path: "../figures/"
+    comment: "#>"
+    tidy: styler
+execute:
+  echo: true
+  warning: false
+  message: false
+  cache: false
+tbl-cap-location: top
+fig-cap-location: bottom
+filters:
+  - lightbox
+lightbox: auto
+bibliography: [references.bib, data_skills_refs.bib]
+link-citations: true
+csl: unified-style-linguistics.csl
+---
+
+One of the most essential aspects of data management is understanding how files are organized on your computer (or other systems). It helps to recall the basic metaphor that the term *file* is intended to evoke---that a computer "file" is like a paper document that can be stored as a file in a folder in a file cabinet.
+
+![How filing systems used to work](../_images/blue-filing-cabinet.jpg){#fig-rstudio fig-align="left" fig-alt="Filing cabinet" width="60%"}
+
+A computer file contains information on its contents, instructions needed to read them, and where it is stored. Since computers are not limited to physical space, we can in principle have any number of files within a folder, folders within bigger folders, and so on. Folders are also referred to as **directories**, and I'll use these terms interchangeably. Every file sits inside some directory. A directory within another directory is often called a **subdirectory** (subfolder). 
+
+Working with file structures involves several elements, including thinking through names, structures, and relationships of your files and directories. 
+
+# File structure 
+
+The total organisation of all the files and directories is what we call the **file system structure**. This defines how information in key directories and files (existing and future) are organized and how they are stored in a computer's operating system. Although different systems have different standards, all major operating systems (Windows, Mac OS or Linux/UNIX) have similar characteristics and use a hierarchical structure of directories branching off the root directory. The "file" metaphor should be easy to see: in a physical filing system we have papers (files) stored within folders (directories) stored within bins or drawers or other containers.   
+
+```{r}
+#| label: fig-file-system
+#| fig-cap: "Example file system structure"
+#| echo: false
+#| fig-width: 5
+#| fig-height: 4
+knitr::include_graphics("../_images/folder_structure.png")
+```
+
+The **root directory** is the highest-level directory of the file system structure. Its like the file cabinet: nothing exists outside it. In Mac OS, Linux, and other UNIX-like operating systems, the root is represented with a simple forward slash (`/`). In Windows, the root is represented by the drive name (a capital letter) and a backslash, e.g. `C:\`. All files and other directories, also referred to as *folders*, are located below the root. Directories that are located inside other directories are called subdirectories (subfolders). Directories contain a list of the file names and/or subdirectories for each file in the directory.
+
+# File formats
+
+A file's **format**, or type, determines how data in the file is created, stored, and read. File types are indicated in the **file extension**, which is the bit following the `.` at the end of the file name. Some common formats you will encounter are shown in @tbl-file-formats. You are probably familiar with many of them.
+
+| File Format | Extension | Description |
+|:---|:---|:---|
+| Text | `.txt` | Contains plain text |
+| MS Word document | `.docx` | Contains text and image data |
+| PDF (Portable Document Format) | `.pdf` | Contains text and image data |
+| MS Excel spreadsheet | `.xlsx` | Contains spreadsheet/table data |
+| CSV (Comma-separated Values) | `.csv` | Contains spreadsheet/table data |
+| R | `.R` | Contains an R program |
+| Python | `.py` | Contains a Python Program |
+| HTML (HyperText Markup Language) | `.html` | Contains an HTML web page |
+| Quarto | `.qmd` | Contains markup for Quarto  |
+| PNG (Portable Network Graphics) | `.png` | Common for high resolution images |
+| JPEG (Joint Photographic Experts Group) | `.jpeg` | Standard for minimized images |
+| Executable | `.exe` | Executes a program |
+| Zip | `.zip` | Contains compressed files that can be uncompressed into their original form |
+
+: Common file formats {#tbl-file-formats tbl-colwidths="[30,20,50]"}
+
+# File paths
+
+A **file path** specifies the location of a file in a computer's file system structure. In general, a **path** is a string of characters which specifies a unique location within the system, and when writing code, paths are used to tell the program you're using where to find the data, images, or code you want it to use. Different sections of the path are separated by a **path separator**, such as a forward slash (`/`). These different sections represent the separate (sub)directories in the system. For example:
+
+```
+C:/Users/Jason/R/test_code.R
+```
+
+Here, the file `test_code.R` is inside the `R` directory/folder, which is inside the `Jason` directory, which is inside the `Users` directory, which is inside the root `C:/` drive on my Windows laptop.  
+
+For a Mac user, this might look like so:
+
+```
+/Users/Jason/R/test_code.R
+```
+
+::: {.callout-important}
+## Always use `/` for paths
+
+UNIX-based operating systems, such as Linux or Mac OS, use the forward slash (`/`) as the path separator, but Windows uses the back slash (`\`). This is mainly for historical reasons. The two systems developed independently, but in the 1990s the rise of the internet forced software developers to find a compromise. UNIX got there first, and since the back slash is used for other purposes in UNIX systems (we'll see how later on), Windows has adapted to allow both `/` or `\` for its own path names. To avoid confusion, we'll always use `/` here for file paths.  
+:::
+
+The path above is an example of an **absolute file path**. Absolute paths specify the location of a file from the root directory in the file system structure. **Relative file paths**, on the other hand specify the location of a file *relative to some directory*. This is perhaps easier to understand if we first talk about **working directories**.
+

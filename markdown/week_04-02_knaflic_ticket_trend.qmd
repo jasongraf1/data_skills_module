@@ -1,0 +1,610 @@
+---
+title: "Data visualisation: Knafflic's ticket trends example"
+subtitle: "Data Skills for the Digital World: Week 4" 
+author: "Jason Grafmiller<br>[j.grafmiller@bham.ac.uk](mailto:j.grafmiller@bham.ac.uk)"
+date: "Last updated: `r format(Sys.Date(), '%d %B %Y')`"
+format:
+  html: 
+    toc: true
+    toc-location: left
+    theme: 
+      light: flatly
+      dark: darkly
+    mainfont: 'Roboto'
+    fontsize: 100%
+    df-print: paged
+    code-copy: true
+    code-tools:
+      source: true
+      toggle: true
+      caption: "code"
+    css: "styles/custom_bib.css"
+    include-in-header: "styles/roboto_serif.html"
+    include-after-body: "styles/footer.html"
+    embed-resources: true
+knitr:
+  opts_chunk: 
+    # cache.path: "../cache/"
+    # fig.path: "../figures/"
+    comment: "#>"
+    tidy: styler
+execute:
+  echo: true
+  warning: false
+  message: false
+  cache: false
+tbl-cap-location: top
+fig-cap-location: bottom
+filters:
+  - lightbox
+lightbox: auto
+bibliography: [references.bib, data_skills_refs.bib]
+link-citations: true
+csl: unified-style-linguistics.csl
+
+---
+
+This example is taken from @knaflic_storytelling_2015. The data we're going to analyze comes from a ticket office, and we're looking at how many tickets were received, in comparison to how many tickets were successfully processed.
+
+In May, two employees quit the office. The data analyst who worked on this data has a simple message to tell the employers: "since these employees left in May, the office has fallen behind in processing tickets." This is a call for action to hire two new employees.
+
+In this context, **everything in the plot should be geared to distilling this core message**. The goal is not just to show some data, but to drive data-driven decision making. The fact that after May, the ticket office fell behind should be immediately obvious, so that the the decision makers are convinced that two new employees need to be hired.
+
+In this file we'll walk through how we could approach our visualisation of the data step by step.
+
+# Setup and overview
+
+Let's load our packages:
+
+```{r}
+library(here)
+library(tidyverse)
+```
+
+Next, let's load the data. 
+
+```{r}
+ticket <- read_csv(here('data', 'knaflic_tickets.csv'))
+```
+
+Check what's in the data.
+
+```{r}
+ticket
+```
+
+
+Now we'll put it into long format and clean it up a bit.
+
+```{r}
+ticket <- ticket |> 
+    mutate(month_num = 1:12) |> 
+    pivot_longer(cols = 2:3, names_to = 'type', values_to = "number") |> 
+    mutate(type = str_remove_all(type, 'volume_'))
+ticket
+```
+
+So we should have a dataframe with 24 rows and 4 columns. The columns are:
+
+- `month`: the name of the month when data was collected
+- `month_num`: the same information, just with months numbered
+- `type`: whether we are looking at `received` or `processed` tickets
+- `number`: how many tickets were received or processed
+
+When doing a data analysis for a client or a co-worker within your company, a list such as the one above is the sort of information you should be given. If you ever find yourself in a position where somebody gives you data without explaining what the content of each column is, make sure to ask for more information!
+
+# First ggplot: a crappy bar chart
+
+Ok cool, so, let's start making some plots. First, let's re-create a bar plot. But we'll start slow, building things up piece by piece, so that we can understand what each function does.
+
+This is the simplest, most minimal thing we could do is the following:
+
+```{r}
+#| fig-width: 5
+#| fig-height: 3.5
+ggplot(data = ticket)
+```
+
+Let's see what happens when we add `geom_col()` to our ggplot:
+
+```{r}
+#| error: true
+ggplot(data = ticket) +
+  geom_col()
+```
+
+Oops! We get an error message. That's because this geom doesn't know *what* from the `ticket` tibble to plot. That is, we didn't tell the geom how it should relate to the data. 
+
+To fix things with the above plot, we need to specify **aesthetic mappings**. These mappings tell your geoms how they should relate to the data.
+
+Notice that the error message seen above was actually quite helpful and tells you *which* aesthetic mappings are missing. To plot a bar plot, you need at least x- and y-values. So you need to map one column of the data onto x, and another onto y.
+
+If we want to show ticket trends over time, then we should probably assign the `month` column to the x-axis, and the number of tickets column (`number`) to the y-axis. We specify these mappings with an additional argument that always has to be wrapped into the `aes()` function:
+
+```{r}
+ggplot(data = ticket,
+       mapping = aes(x = month_num, y = number)) +
+  geom_col()
+```
+
+Ok! This looks like a pretty good start. We successfully made the error message go away, and this graph definitely showed us *something*.
+
+But it's also definitely not what we want (yet). Notice the y-axis scaling... and compare that to our input data. If you scroll up, you will see that for the first month, January, there were 160 received and 160 processed tickets. What seems to have happened here is that ggplot added these two numbers on top of each other. This probably happened because we didn't specify that the received and processed numbers should be separate. This is quite a treacherous default behavior for this function... and let me halt here to tell you that this is why in R, and in programming more generally...
+
+**You should never believe it does as intended!!**
+
+Always check everything. Double-, and triple-check. Quadruple-check. Check check check. It's just *so* easy for mistakes to sneak in, and the only way to find out is to be conscientous and skeptical, not trusting your tools blindly.
+
+Ok, so how can we change the graph so that there's two separate bars per month? For this, we can introduce another aesthetic mapping. We could map the `type` (received versus processed) onto the `fill` of the bars. Let's do that and see what happens!
+
+```{r}
+ggplot(data = ticket,
+       mapping = aes(x = month_num, y = number, fill = type)) +
+  geom_col()
+```
+
+Nice. This help us understand why the y-axis was scaled the way it was in the above plot, and why there were 320 tickets for January. Now that the two types of ticket sales are differentiated by color, we can see that the two types of tickets (received and processed) were just added up. This is what's called a *stacked bar plot*, because the individual bars are stacked on top of each other.
+
+How can we see the two bars next two each other? The solution is to specify the argument `position = 'dodge'` within the `geom_col()` layer, this makes the bars appear next to each other.
+
+```{r}
+ggplot(data = ticket,
+       mapping = aes(x = month_num, y = number, fill = type)) +
+  geom_col(position = 'dodge')
+```
+
+There we go! That's much better. Still a really ugly plot though. There's *so* much I hate about this, starting with the horrible default colors, the grey background, and so on. At least we got the basics right. But rather than tweaking this bar graph, we're going to show the same data as a totally different kind of graph. 
+
+Why? Well, think about what our message was: we want the employer to hire two new employees because the ticket office is falling behind processing received tickets after May. Look at the graph above and ask yourself whether this core message is easy to distill. I'd say no. In fact, a pretty resounding no. This graph is utterly dysfunctional: when I look at it, my mind just goes blank and I wonder what I am supposed to look at, because the graph is so extremely cluttered. 
+
+In line with what we've discussed, let's actually change plot types completely, from a bar plot to a line graph. This is for two reasons:
+
+- First, **bar charts are generally good for categorical differences**, such as the difference between two groups or so. **Lines, on the other hand, cue us into looking for trends**, and that's what we want to show here: the trend of ticket sales.
+- Second, these bar charts add a lot of "non-data ink" in the words of Edward Tufte. At their most basic, these numbers are just points (two numbers for each month), but instead we have huge bars that take up a lot of space that doesn't directly relate to the data... this is partially what's responsible for the impression that the graph is quite cluttered.
+
+# Second ggplot: a line graph
+
+Soooo, lt's make a line graph! For this, we need to switch from `geom_col()` to `geom_line()`. On top of that, because we're now dealing with *line* colors, rather than the *fill* color of bar charts, we need to change `fill = type` to `color = type` (or `col = type`) in the aesthetic mappings. That is, we map the `type` column onto the the `color` aesthetic.
+
+```{r}
+ggplot(data = ticket,
+       mapping = aes(x = month_num, y = number, col = type)) +
+  geom_line()
+```
+
+This graph is so much more effective about showing our core message. The fact that after May (month 5), the ticket office fell behind processing tickets is much more visible now. And there's overall much less clutter, or, to use Edward Tufte's lingo, we have increased the ratio of "data ink" to "non-data ink".
+
+However, this plot still leaves much to be desired. Here's a list of all the issues I have with this plot:
+
+- The grey slabs in the background are always created by `ggplot2` by default... and that's not optimal; for one, because they again add a lot of "non-data ink", but then also, we don't really need the slabs and lines because we don't *want* people to read the exact numerical values in this graph. If we wanted people to read exact values, we should just give them a table! Plots are primarily used to de-emphasize individual values at the expense of getting a bird's eye picture of bigger patterns. If we we want to highlight the trend and make it as visible as possible, i.e. we want to *reduce* visual clutter, we should get rid of these slabs.
+- The x- and y-axis labels are just the names of the columns in the dataframe... which looks rather technical and obscure, and it is something that's ultimately rooted in your data analysis, which your audience doesn't care about really. What they *do* care about is having stuff they understand, so we should change the labels to something more readable.
+- Then, notice that the y-axis is scaled to start with 100... but it would be more honest to show zero, which is generally recommended in most circumstances. If we don't show zero, somebody might come along and say that we are artificially amplifying the pattern: if the y-axis is scaled smaller, then any trends will appear bigger. We don't want to make ourselves open to this attack.
+- Finally, notice that the x-axis uses the numerical month variable. But wouldn't it make more sense to have more readily comprehensible labels, such as "Jan", "Feb", etc.? I'd say so!
+
+Let's change each in turn. 
+
+## Changing the background
+
+To get rid of the grey slabs, we can use themes. For our purposes here, adding `theme_classic()` to the plot will do a great job.
+
+```{r}
+ggplot(data = ticket,
+       mapping = aes(x = month_num, y = number, col = type)) +
+  geom_line() +
+  xlab('Month') +
+  ylab('Number of tickets') +
+  theme_classic()
+```
+
+This theme doesn't come with the grey slabs, so it gets the job done of reducing non-data ink further and de-cluttering this graph. 
+
+## Changing axis labels
+
+For axis labels or titles we can use `xlab()` and `ylab()`, which are added to the plot with `+`, like everything else in the world of `ggplot2`. Alternatively, you can use `labs(x = 'Month', y = 'Number of tickets')`, which is my preference, but you can do whatever *you* like.
+
+```{r}
+ggplot(data = ticket,
+       mapping = aes(x = month_num, y = number, col = type)) +
+  geom_line() +
+  xlab('Month') +
+  ylab('Number of tickets') +
+    theme_classic()
+```
+
+Now the axes labels have much less of a technical feel to them, which is what you generally want to avoid when communicating with non-technical audiences. We're definitely getting closer to what we want!
+
+## Changing axis scale
+
+Next, let's change the y-axis scaling so that zero is included. For this, we can add the `ylim()` feature to the plot. It takes two values: where the y-axis starts, and then where it ends. Let's put 0 and 300 in there, like on  Knaflic's plot.
+
+```{r}
+ggplot(data = ticket,
+       mapping = aes(x = month_num, y = number, col = type)) +
+  geom_line() +
+  xlab('Month') +
+  ylab('Number of tickets') +
+  ylim(0, 300) +
+  theme_classic()
+```
+
+Nice. I'd say that this is a more honest depiction of what's going on. It's not that the ticket processing is massively reduced after May, as the other plot without zero would suggest. This plot strikes a nice balance between making the trend still clearly visible, all the way not over-emphasizing it in a dishonest fashion.
+
+## Changing axis value
+
+Next, we want the month names on x-axis, rather than numerical values. This is going to be a bit more involved. To have even more control about how our axes behave, we can use `scale_` functions. `scale_x_continuous()` is the appropriate one if you have an x-axis that has continuous values. We'll add this and specify the `breaks` argument to be an integer sequence from 1 to 12, which can be done with `1:12`.
+
+Check what `1:12` does by itself first:
+
+```{r}
+1:12
+```
+
+Then we use this together with `scale_x_continuous()`:
+
+```{r}
+ggplot(data = ticket,
+       mapping = aes(x = month_num, y = number, col = type)) +
+  xlab('Month') +
+  ylab('Number of tickets') +
+  ylim(0, 300) +
+  scale_x_continuous(breaks = 1:12) +
+  geom_line() +
+  theme_classic()
+```
+
+Getting there! But now we want the labels to be text. We could put the full month name on there: "January", "February", and so on. But that would be a lot of text. As on Cole's plot, let's make it so that we use shorter labels: "Jan", "Feb" etc.
+
+We *could* hand-specify the labels by simply hand-specifying them, like so:
+
+```{r}
+my_labels <- c('Jan', 'Feb', 'Mar')
+
+# Check:
+
+my_labels
+```
+
+That's OK, and there would be no shame in doing it this way. But whenever you *can* avoid typing, you should try to do so... not only because typing takes time, but also because it introduces more room for error. Paradoxically, less typing generally takes more programming skills because you need to find tricks to make things more efficient. So, the more you learn, the more efficient you become, and the less typing you will have to do.
+
+My strategy in this case would be to get the column of month names we already have. 
+
+```{r}
+ticket$month
+```
+
+This is cool, but we have each label twice because there's two data points per month in this tibble. So we can wrap the `unique()` function around this column to get only the unique labels, that is, each label only once:
+
+```{r}
+unique(ticket$month)
+```
+
+Nice! Let's save this into an R object because we're going to do further processing with it. Let's call our R object `my_labels`.
+
+```{r}
+my_labels <- unique(ticket$month)
+```
+
+And remember, *you should never believe it does as intended*. Double-check that this object you have just created actually contains what you want. 
+
+```{r}
+my_labels
+```
+
+Next, let's only take the first three characters of each string to get shorter labels. For this we use one of the many `str_` functions that come with the tidyverse. If you didn't know which one to choose from, google it! I happen to remember that `str_sub()` would be appropriate here, so I'll use that one. This function is named so because it gives you a *substring* as output for any input string you give to this function. The arguments `start` and `end` specify the start character and the end character of the string you want to extract, so `start = 1` and `end = 3` would give you the string that's in between the first and the third character.
+
+```{r}
+str_sub(my_labels, start = 1, end = 3)
+```
+
+Perfect. This does the job. Let's save this by overriding our `my_labels` object with the substring of that object. It's generally not a problem in R to override objects because if you have a script like the current one, you can always very easily go back and repeat steps if you messed something up.
+
+```{r}
+my_labels <- str_sub(my_labels, start = 1, end = 3)
+
+# Check:
+
+my_labels
+```
+
+The final step is to capitalize the first letter. 
+
+```{r}
+str_to_title(my_labels)
+```
+
+After checking that this function does what we want it to do, we can safely override our `my_labels` object with the "titled" (= capitalized) version of `my_labels`, like so:
+
+```{r}
+my_labels <- str_to_title(my_labels)
+```
+
+*Finally* we have everything ready to make the x-axis labels be the first three letters of the months. For this, we supply our `my_labels` object to the `labels` argument of `scale_x_continuous()`, which, remember, controls everything about the x-axis.
+
+```{r}
+ggplot(data = ticket,
+       mapping = aes(x = month_num, y = number, col = type)) +
+  xlab('Month') +
+  ylab('Number of tickets') +
+  ylim(0, 300) +
+  scale_x_continuous(breaks = 1:12,
+                     labels = my_labels) +
+  geom_line() +
+  theme_classic()
+```
+
+Wow! This is already ***so*** much nicer. 
+
+Our solution to this x-axis problem was quite involved. Remember that there's no shame in just typing out the 12 months by hand, for which you would use `c()`, the "concatenate" function, so that all the months are supplied together to the same argument. This is how that solution would look like:
+
+```{r}
+ggplot(data = ticket,
+       mapping = aes(x = month_num, y = number, col = type)) +
+  xlab('Month') +
+  ylab('Number of tickets') +
+  ylim(0, 300) +
+  scale_x_continuous(breaks = 1:12,
+                     labels = c('Jan', 'Feb', 'Mar',
+                                'Apr', 'May', 'Jun',
+                                'Jul', 'Aug', 'Sep',
+                                'Oct', 'Nov', 'Dec')) +
+  geom_line() +
+  theme_classic()
+```
+
+This totally works, but besides taking more time and introducing more room for typos, you now also need to make sure that the bracketing is correct. Remember that there's always multiple solutions to the same problem in programming, and you need to figure out what works best for you. More advanced solutions, which are often also more efficient, become accessible as your R knowledge expands over time. There's no rush! It all comes with experience.
+
+Looking back at the plot we have just created, notice that now, our "Month" x-axis title has become a bit superfluous: it's immediately apparent that these are months. While it's generally a good idea to label all axes, here there's really no need to. So we can get rid of this. One easy way of doing this is to just make the text in the `xlab()` argument empty. By supplying an empty string, there will be a title... of nothing!
+
+```{r}
+ggplot(data = ticket,
+       mapping = aes(x = month_num, y = number, col = type)) +
+  xlab('') +
+  ylab('Number of tickets') +
+  ylim(0, 300) +
+  scale_x_continuous(breaks = 1:12,
+                     labels = my_labels) +
+  geom_line() +
+  theme_classic()
+```
+
+# More cosmetic tweaking
+
+There's a few more things we could do to make this graph even nicer. How much time you want to invest into making your graph just perfect is up to you, and up to what is feasible in the context of your data analysis situation. If you're pressed on time, skip some of these steps. But if you have more time, it's almost always worth investing into tweaking your plots — your audience will appreciate it, and your message will be more effective!
+
+We won't do everything to recreate the graph because some of the steps are a bit too advanced, but we'll get pretty close to her graph. Let's finish with the following tweaks:
+
+- Remember that in Cole's original graph, she also added a vertical line for May, which is the critical month when two employees quit the ticket office. This is certainly going to help appreciate the relationship between missing two employees and the emerging trend of falling behind with processing the tickets.
+- The colors are the default ggplot colors, which are honestly just a bit ugly.
+- This is a matter of personal taste, but the lines are too thin. To emphasize that what matters in this situation---the number of ticket sales---it makes sense to make the lines thicker.
+- Finally, the legend title `type` is not really needed. It's actually a bit obscure as again, this just relates to the column name you happen to have in your data, something which your audience doesn't care about. We can just get rid of that legend title without losing any meaning.
+
+Let's start by adding the vertical line. In contrast to Cole's graph, we'll make it dashed, so that it is immediately obvious that this is not data (the solid lines) but background information. To add the line, we need to add another geom. For vertical lines, we use `geom_vline()`. This geom doesn't need an aesthetic mapping (= something that relates to the data), because we can just specify that the vertical line should be at the 5th month, May. The argument for this is called `xintercept`: the value where the line "intercepts" the x-axis. Then we supply the additional argument `linetype = 'dashed'` to make the line dashed.
+
+```{r}
+ggplot(data = ticket,
+       mapping = aes(x = month_num, y = number, col = type)) +
+  xlab('') +
+  ylab('Number of tickets') +
+  ylim(0, 300) +
+  scale_x_continuous(breaks = 1:12,
+                     labels = my_labels) +
+  geom_vline(xintercept = 5,
+             linetype = 'dashed') +
+  geom_line() +
+  theme_classic()
+```
+
+Great!
+
+Next, line thickness. That's easy: the argument `linewidth` of `geom_line()` controls the thickness (it used to be `size`). I never know quite what numbers to put in there, and how exactly the numerical values are scaled, which means that I generally play around with a few values until I get the desired thickness. After exploring a few options, I decided that `linewidth = 1.2` appeals to my aesthetic sensibilities, and it's enough to emphasize the trend.
+
+```{r}
+ggplot(data = ticket,
+       mapping = aes(x = month_num, y = number, col = type)) +
+  xlab('') +
+  ylab('Number of tickets') +
+  ylim(0, 300) +
+  scale_x_continuous(breaks = 1:12,
+                     labels = my_labels) +
+  geom_vline(xintercept = 5,
+             linetype = 'dashed') +
+  geom_line(linewidth = 1.2) +
+  theme_classic()
+```
+
+Let's change the colors. This can be done with `scale_` functions again. Appreciating these functions, honestly, took me a long time to figure out. It turns out that for categorical data as well, you have "scales". When the data is categorical, these map color values to specific categories. So the `processed` data points get assigned one color, then the `received` values another color. There are many scale functions, but I decided that I wanted to choose my own colors, so I ended up using `scale_color_manual()`, which allows you to *manually* specify color values. Here's how this works:
+
+```{r}
+ggplot(data = ticket,
+       mapping = aes(x = month_num, y = number, col = type)) +
+  xlab('') +
+  ylab('Number of tickets') +
+  ylim(0, 300) +
+  scale_x_continuous(breaks = 1:12,
+                     labels = my_labels) +
+  scale_color_manual(values = c('violetred', 'steelblue')) +
+  geom_vline(xintercept = 5,
+             linetype = 'dashed') +
+  geom_line(linewidth = 1.2) +
+  theme_classic()
+```
+
+How do I know these color names? You can interrogate the built-in colors using the `colors()` function like this:
+
+```{r}
+colors()
+```
+
+Feel free to pick and choose any of these colors to change the plot above.
+
+Our final piece of work relates to the legend. We want to get rid of the "type" title. Here again, I failed to remember how to do this and googled "get rid of legend title ggplot2". This made me find out that the `scale_` functions allow you to add the argument `name = `, which specifies the legend title. If you supply `NULL` to this legend title argument, the title is switched off. In googling this, I also happen to have found out that the same scale function also accepts a `labels` argument, so we can give the legend more readily readable names.
+
+```{r}
+ggplot(data = ticket,
+       mapping = aes(x = month_num, y = number, col = type)) +
+  xlab('') +
+  ylab('Number of tickets') +
+  ylim(0, 300) +
+  scale_x_continuous(breaks = 1:12,
+                     labels = my_labels) +
+  scale_color_manual(values = c('violetred', 'steelblue'),
+                     name = NULL,
+                     labels = c('tickets processed', 'tickets received')) +
+  geom_vline(xintercept = 5,
+             linetype = 'dashed') +
+  geom_line(linewidth = 1.2) +
+  theme_classic()
+```
+
+I'm pretty happy with this plot now!
+
+... but of course, there's always more that could be done. For example, notice that the order of the legends is reverse with how the trend goes. I'd flip the legend, so that "tickets processed" is beneath "tickets received", just like on the graph. Other changes I'd make if I had more time would be to make the y-axis title bold, and for my taste the title is a bit too close to the tick marks. These changes are, however, a bit more involved and I feel that we've learned enough for now. You have everything at your disposal to be able to do these changes if you really wanted to... by googling! The basic plot is there - the rest is just circus.
+
+The one thing we might want to do before we finish is to add a title, and why not add a title that implicitly contains a call for action and also tells the audience what the main message is supposed to be. I decided to go with:
+
+**"We are falling behind in processing tickets since May"**
+
+You can add this using `ggtitle()`, like this:
+
+```{r}
+ggplot(data = ticket,
+       mapping = aes(x = month_num, y = number, col = type)) +
+  xlab('') +
+  ylab('Number of tickets') +
+  ylim(0, 300) +
+  scale_x_continuous(breaks = 1:12,
+                     labels = my_labels) +
+  scale_color_manual(values = c('violetred', 'steelblue'),
+                     name = NULL,
+                     labels = c('tickets processed', 'tickets received')) +
+  geom_vline(xintercept = 5,
+             linetype = 'dashed') +
+  geom_line(linewidth = 1.2) +
+  ggtitle('We are falling behind with processing tickets since May') +
+  theme_classic()
+```
+
+Nice!
+
+# Saving your work
+
+Ok, now that we have a workable graph that does a decent job at communicating the core message to our audience, let's save our work so that we can use it in slide shows, reports, or whatever medium we are presenting this data in. For this, all we need to do is call the `ggsave()` function right after the plot. By default, this function will always save whatever ggplot is last opened. So if you add that function right after your plot, it will save *that* plot. The only argument this function needs is the file name, and you can specify all sorts of image formats, such as `.pdf`, `.png`, and `.jpeg`. I decided to go with `.pdf`. The `width` and `height` arguments can be used to control the width and height of the plot. I always play around with various values until I get what I want (but there's also ways of specifying exact pixel sizes etc.).
+
+```{r}
+ggplot(data = ticket,
+       mapping = aes(x = month_num, y = number, col = type)) +
+  xlab('') +
+  ylab('Number of tickets') +
+  ylim(0, 300) +
+  scale_x_continuous(breaks = 1:12,
+                     labels = my_labels) +
+  scale_color_manual(values = c('violetred', 'steelblue'),
+                     name = NULL,
+                     labels = c('tickets processed', 'tickets received')) +
+  geom_vline(xintercept = 5,
+             linetype = 'dashed') +
+  geom_line(linewidth = 1.2) +
+  ggtitle('We are falling behind with processing tickets since May') +
+  theme_classic()
+
+# Save my work:
+ggsave('ticket_sales.pdf',
+       width = 5.5, height = 3.5)
+```
+
+After exploring a few values, I went with `5.5` for the `width` argument and `3.5` for the `height` argument. This choice is motivated for several reasons: First, because there's a legend on the right-hand side of this plot, we need to make sure that the plot is wide enough. Second, our brain's visual system generally finds things more appealing when they are more horizontally extended, which is also why screens are generally wider than taller, as in the cinema. All sorts of images and videos on computer screens also have a tendency to be relatively wider than higher. I generally strive for an "aspect ratio" of at least 4:3.
+
+# Even better plot
+
+Below I've tried to replicate Knaflic's Figure 0.3 on page 4 entirely in R. It involves a bit of extra work, but you can see how it's done if you click "Show the code". It is a fair bit more complex, but it's really just adding layers onto the plot in ways we've already seen (with a few tricks I've picked up along the way). 
+
+```{r}
+#| code-fold: true
+#| code-summary: "Show the code"
+
+# I use this package to enable "richtext" geoms, which allow special syntax and 
+# even html code to be interpreted for e.g. changing boldface, italics or any
+# other formatting quite easily. 
+library(ggtext)
+
+# Here I've simplified the `type` labels and capitalised them. 
+ticket <- ticket |> 
+    mutate(type = str_remove(type, "tickets "),
+           type = str_to_title(type))
+
+ggplot(data = ticket, 
+       mapping = aes(x = month_num, y = number, col = type)) +
+  xlab('') +
+  ylab('Number of tickets') +
+  scale_y_continuous(limits = c(0, 300), 
+                     breaks = seq(0, 300, by = 50), # set break values from 0 to 300 by 50
+                     expand = expansion(add = c(0, 0)) # remove any padding 
+                     ) +
+    scale_x_continuous(breaks = 1:12,
+                     labels = my_labels,
+                     expand = expansion(add = c(0, 2)) # add some padding to the right for the text
+                     ) +
+  scale_color_manual(values = c('steelblue4', 'grey40'),
+                     guide = "none", # remove the legend completely
+                     labels = c('tickets processed', 'tickets received')) +
+    # annotate() allows you to put things directly "on top of" your plot. 
+    # These are not mapped to a dataframe, but take aes() values that you input directly.
+    # Here I'm adding a line segment at x = 5, that stretches from y = 0 to y = 250
+    annotate("segment", x = 5, xend = 5, y = 0, yend = 250, color = "grey") +
+    geom_line(linewidth = 1.2) +
+    # here I'm only putting points and text for months Aug or later. I split the
+    # text by type, so I can put values for "Received" above their points, and
+    # values for "Processed" below their points
+      geom_point(
+        data = ticket |> 
+            filter(month_num >= 8),
+        size = 3
+    ) +
+    geom_text(
+        data = ticket |> 
+            filter(month_num >= 8, type == "Received"),
+        mapping = aes(label = number),
+        nudge_y = 20 # nudge up
+    ) +
+    geom_text(
+        data = ticket |> 
+            filter(month_num >= 8, type == "Processed"),
+        mapping = aes(label = number),
+        nudge_y = -20 # nudge down
+    ) +
+    # next I add the type of ticket to the right of the last month's data point
+    geom_text(
+        data = ticket |> 
+            filter(month_num == 12),
+        mapping = aes(label = type), 
+        size = 4,
+        nudge_x = .2, # start the tex a little bit of space to the right of the point
+        hjust = 0 # this left-aligns the text (hjust = 1 is right-aligned)
+        ) +
+    annotate(
+        geom = "richtext", x = 3.5, y = 300, color = "white", text.colour = "grey20",
+        label = "**2 employees quit in May.** We nearly kept up with incoming volume<br>
+            in the following two months, but fell behind with the increase in Aug<br>
+            and haven't been able to catch up since.",
+        hjust = 0, 
+        vjust = 1
+    ) +
+  labs(
+      title = "Please approve the hire of 2 FTEs",
+      subtitle = 'Ticket volume over time'
+      ) +
+  theme_classic() +
+    # the theme() layer is where you can really tweak the style of every aspect of the plots.
+    # Try `?theme` and see the massive list of things you can style
+    theme(
+        axis.ticks.x = element_blank(), # remove ticks above months
+        axis.title.y = element_text(color = "grey40", hjust = 1), # color and align y axis label to the top
+        plot.title = element_text(size = 20, face = "bold", color = "grey20",
+                                  margin = margin(0,0,10,0)), # add some space below title
+        plot.subtitle = element_text(size = 14, color = "grey20", 
+                                     margin = margin(0,0,10,0)) # add some space below subtitle
+    )
+```
+
+Looks pretty good, no?
+

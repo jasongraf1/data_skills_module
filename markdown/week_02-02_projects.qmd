@@ -1,0 +1,132 @@
+---
+title: "RStudio Projects"
+subtitle: "Data Skills for the Digital World: Week 2" 
+author: "Jason Grafmiller<br>[j.grafmiller@bham.ac.uk](mailto:j.grafmiller@bham.ac.uk)"
+date: "Last updated: `r format(Sys.Date(), '%d %B %Y')`"
+format:
+  html: 
+    toc: true
+    toc-location: left
+    theme: 
+      light: flatly
+      dark: darkly
+    mainfont: 'Roboto'
+    fontsize: 100%
+    df-print: paged
+    code-copy: true
+    code-tools:
+      source: true
+      toggle: true
+      caption: "code"
+    css: "styles/custom_bib.css"
+    include-in-header: "styles/roboto_serif.html"
+    include-after-body: "styles/footer.html"
+    embed-resources: true
+knitr:
+  opts_chunk: 
+    # cache.path: "../cache/"
+    # fig.path: "../figures/"
+    comment: "#>"
+    tidy: styler
+execute:
+  echo: true
+  warning: false
+  message: false
+  cache: false
+tbl-cap-location: top
+fig-cap-location: bottom
+filters:
+  - lightbox
+lightbox: auto
+bibliography: [references.bib, data_skills_refs.bib]
+link-citations: true
+csl: unified-style-linguistics.csl
+---
+
+# Setting a working directory {#sec-working-dir}
+
+The **working directory** is the specific location---specified as a file path---where you want R to read in data or files from and write out results to. This is where R automatically looks for files that you ask it to load, and where it will put any files that you ask it to save. RStudio shows your current working directory at the top of the console, or you can get the current working directory with `getwd()`
+
+```{r}
+#| eval: false
+getwd()
+```
+
+```{r}
+#| echo: false
+print("C:/Users/jason/data_skills_module")
+```
+
+Within a project working directory, we can have other subdirectories to organise our files in a nice way. For example, we might want to create a subfolder `data` to store spreadsheets and tabular datasets, a subfolder `R` to store R scripts, and so on. If we want to call these we just need to define the **relative path** from our working directory.
+
+For example, you might have: 
+
+```
+data/spreadsheet1.csv
+data/spreadsheet2.csv
+R/run_visualisation.R
+```
+
+You *can* set your working directory within R but **this is not recommended**, and I'm not going to show you here. That's because there’s a better way...
+
+
+# Projects
+
+RStudio **projects** are a really useful way of keep your work organized. Projects make it straightforward to keep all the files associated with a given project in one place, and separate from files associated with other projects. To be clear, 
+hHere's what we mean by "work in a project":[^jbc]
+
+- File system discipline: put all the files related to a single project in a designated folder.
+    + This applies to data, code, figures, notes, etc.
+    + You might need further organization into subfolders.
+- Working directory intentionality: when working on project A, make sure working directory is set to project A’s folder.
+    + Ideally, this is achieved via the development workflow and tooling, not by baking absolute paths into the code.
+- File path discipline: all paths are relative and, by default, relative to the project’s folder.
+
+[^jbc]: This list is taken directly from <https://rstats.wtf/projects#sec-work-in-a-project>.
+
+Here I've simplified the explanation in Wickham et al. [Chapter 6](https://r4ds.hadley.nz/workflow-scripts), which I highly recommend you read in full. 
+
+To create a new project in the RStudio IDE, use the "File" > "New Project..." and follow these steps:
+
+![From Wickham et al.](../_images/new-project.png)
+
+To create a new project: (top) first click "New Directory", then (middle) click "New Project", then (bottom) fill in the directory (project) name, choose a good subdirectory for its home and click "Create Project". Call your project something usefull, e.g. `data_skills_module` and think carefully about which subdirectory you put the project in. You want to be able to find it when you need it. This will give you a new RStudio project just for this module.
+
+You'll also see a new folder on your computer for this project. Inside this folder you will see a `.Rproj` file (called `PROJECTNAME.Rproj`). If you double-click this file it will open up this RStudio project exactly where you left off: it’s the same working directory and command history, and all the files you were working on are still open. This is a huge time saver!
+
+## Datasets
+
+I recommend creating a `data` folder inside this project (click "New Folder" in the Files tab), to keep your datasets separate from your R scripts. I usually have several subfolders for image files, documents, slides, and the outputs of my analysis, but how you want to organise it is up to you.
+
+Make sure you have downloaded the `data.zip` file from the Canvas page and unzipped it to get a new folder containing all the datasets for this module. You can move this folder (or just copy its contents into a different one) into the project directory you've created for this class.
+
+
+## Project safe paths
+
+As mentioned above, it's recommended that you use relative paths within a project, that way anyone who tries to use your code within their own project directory (this includes your future self) will be able to reproduce it later on.
+
+For this I use the `{here}` package, which is designed for managing file paths efficiently.
+
+```{r}
+#| eval: false
+install.packages("here")
+```
+
+```{r}
+library(here)
+here()
+```
+
+The `here()` function figures out the top-level of your current project and defines paths relative to it. The standard working directory of an RStudio Project is the folder containing the `.Rproj` file. You can create paths by including arguments to `here()` like so.
+
+```{r}
+here("data", "file_i_want_to_load.csv")
+```
+
+The great thing is that regardless of where the script file you are working in sits in the project---it could be nested inside other folders, e.g. `scripts/R/my_script.R`---the following code will find the file `data/file_i_want_to_load.csv`.
+
+```{r}
+#| eval: false
+here("data", "file_i_want_to_load.csv") |> 
+    read_csv()
+```

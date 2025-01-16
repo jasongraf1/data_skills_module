@@ -1,0 +1,614 @@
+---
+title: "Basic plot types"
+subtitle: "Data Skills for the Digital World: Week 3-4" 
+author: "Jason Grafmiller<br>[j.grafmiller@bham.ac.uk](mailto:j.grafmiller@bham.ac.uk)"
+date: "Last updated: `r format(Sys.Date(), '%d %B %Y')`"
+format:
+  html: 
+    toc: true
+    toc-location: left
+    theme: 
+      light: flatly
+      dark: darkly
+    mainfont: 'Roboto'
+    fontsize: 100%
+    df-print: paged
+    code-copy: true
+    code-tools:
+      source: true
+      toggle: true
+      caption: "code"
+    css: "styles/custom_bib.css"
+    include-in-header: "styles/roboto_serif.html"
+    include-after-body: "styles/footer.html"
+    embed-resources: true
+knitr:
+  opts_chunk: 
+    # cache.path: "../cache/"
+    # fig.path: "../figures/"
+    comment: "#>"
+    tidy: styler
+execute:
+  echo: true
+  warning: false
+  message: false
+  cache: false
+tbl-cap-location: top
+fig-cap-location: bottom
+filters:
+  - lightbox
+lightbox: auto
+bibliography: [references.bib, data_skills_refs.bib]
+link-citations: true
+csl: unified-style-linguistics.csl
+
+---
+
+We've already seen how the core idea of the "grammar of graphics" works in `{ggplot2}`, so now we'll look at some of the basic types of plots, and how to create them. We'll also look at how to tweak some other aspects along the way. Visualisation is one of the first, and arguably most important, steps in any data analysis. 
+
+As always we start by cleaning our workspace (restart RStudio or type `Ctrl/Cmd+Shift+F10`) and loading our package(s). 
+
+```{r}
+library(here)
+library(tidyverse)
+```
+
+# Categorical data
+
+We'll start by looking at how to visualise categorical data, which is usually simply counting the frequencies of the different categories our data takes. We can do a lot with those frequencies statistically, but in terms of visualisations there are only limited range of methods we can use.
+
+Let's load the first dataset we'll be working with, `ufo_sightings_global.csv`, which you can download from Canvas. This is a large dataset containing information on over 96,000 reports of UFO sightings from around the world going back almost a century. The data comes from National UFO Reporting Center data collected onto the [this Tidy Tuesday repository](https://github.com/rfordatascience/tidytuesday/blob/main/data/2023/2023-06-20/readme.md). This dataset is actually two datasets---one with the sighting details, and one with the geographical locations---that I've cleaned and combined for us to use.
+
+```{r}
+ufos <- here("data", "ufo_sightings_global.csv") |> 
+    read_csv()
+ufos
+```
+
+## Bar charts
+
+We've seen simple bar charts already. These are very common for good reason---they are easy for humans to visually parse. 
+
+Pros:
+
+- Easy to read and interpret (we are very good at judging lengths of things).
+- Can include multiple data series for comparisons (grouped or stacked bars).
+
+Cons:
+
+- Not ideal for showing trends over time.
+- Can become cluttered with too many categories.
+
+To see how these work, let's start with a simple question: **What is the most common time of day for people to see UFOs?** When might I have the best chance of seeing a UFO?
+
+We start by looking at our data, which has a `day_part` column giving the approximate time of day. There is also the exact time included, but we'll come to that later.
+
+```{r}
+select(ufos, day_part)
+```
+
+So we could just count the number of obsevations per `day_part` and get a good sense of the answer. There are a couple ways to create a bar chart in ggplot. The `count()` function is great for this:
+
+```{r}
+ufos |> 
+    count(day_part)
+```
+
+We just plot these values like so. We can drop the "NAs" with `na.omit()`.
+
+```{r}
+ufos |> 
+    count(day_part) |> 
+    na.omit() |> 
+    ggplot(aes(day_part, n)) +
+    geom_col()
+```
+
+So nighttime seems to be the best time to look for UFOs, which makes sense I guess. You'd think it woudl be easier to see them in the day, but the alien visitors are probably too smart to just fly around when anyone could see them...
+
+Anyway, we can also use `geom_bar()`, which automatically counts the data for us. Notice in this case, you only need the x variable. The y values are calculated by `geom_bar()`. Personally, I prefer the first method, because it gives me more control over what is happening.       
+
+```{r}
+ufos |> 
+    na.omit() |> 
+    ggplot(aes(x = day_part)) +
+    geom_bar()
+```
+
+### Sorting bars
+
+Look how the bars are sorted. You can kind of see that they are alphabetical, which is the default ordering in ggplot. It's often more helpful to sort the bars in some meaningful order to get your point across. 
+
+In some cases you might want to sort by the lengths of the bars. This is particularly good for showing rankings and comparing relative values across the categories. The `reorder()` function will do this inside the `aes()` function.
+
+```{r}
+ufos |> 
+    count(day_part) |> 
+    na.omit() |> 
+    ggplot(aes(x = reorder(day_part, n), y = n)) +
+    geom_col()
+```
+
+We can reverse the order by stating `decreasing = TRUE`. Notice also that the x axis title changes too. Let's fix that.
+
+```{r}
+ufos |> 
+    count(day_part) |> 
+    na.omit() |> 
+    ggplot(aes(x = reorder(day_part, n, decreasing = TRUE), y = n)) +
+    geom_col() +
+    labs(x = "Time of day")
+```
+
+Now, this is good to know, but there are also times where it makes more sense to sort bars according to some natural order. This is the case in our data, where there is a natural progression from one time of day to the next. If you're not familiar with the different kinds of dawn and dusk (I wasn't), you can find a good explanation [here](https://www.timeanddate.com/astronomy/different-types-twilight.html). 
+
+We might want to order the bars according to their natural order: from dawn to morning to afternoon... To do this, we'll need to make use of **factors**, which are a special kind of categorical variable in R (see  for more). In a nutshell, 
+
+> Factors are used for categorical variables, variables that have a fixed and known set of possible values [known as **levels**]. They are also useful when you want to display character vectors in a non-alphabetical order. [Wickham et al. Chapter 16](https://r4ds.hadley.nz/factors.html)
+
+This makes sense for our data. We create factos 
+
+```{r}
+day_times <- c("astronomical dawn", "nautical dawn", "civil dawn", "morning", "afternoon", "civil dusk", "nautical dusk", "astronomical dusk", "night")
+
+# Next we mutate our column into a factor column with the levels we defined
+ufos <- ufos |> 
+    mutate(day_part = factor(day_part, levels = day_times))
+```
+
+Now when we plot, the bars will fall in their specified order.
+
+```{r}
+ufos |> 
+    count(day_part) |> 
+    na.omit() |> 
+    ggplot(aes(day_part, n)) +
+    geom_col()
+```
+
+The neat thing is that you can still override this order if you to sort them by `n`.
+
+```{r}
+ufos |> 
+    count(day_part) |> 
+    na.omit() |> 
+    ggplot(aes(x = reorder(day_part, n, decreasing = TRUE), y = n)) +
+    geom_col() +
+    labs(x = "Time of day")
+```
+
+We can add values to the bars by adding a `geom_text()` layer. We use `vjust` to set the vertical justification (alignment). Try different positive and negative values of `vjust` to see what happens yourself.
+
+```{r}
+ufos |> 
+    count(day_part) |> 
+    na.omit() |> 
+    ggplot(aes(day_part, n)) +
+    geom_col() +
+    geom_text(aes(label = n), vjust = -0.5)
+```
+
+
+### Flipping the axes
+
+So there are a lot of things that still need some work. One issue is that the text under the bars is not very readable. We could change the text to abbreviate it, or we could **flip** the axes so that we have horizontal bars. We do this by adding `coord_flip()` (we flip the x and y coordinates) to our ggplot object.
+
+```{r}
+ufos |> 
+    count(day_part) |> 
+    na.omit() |> 
+    ggplot(aes(day_part, n)) +
+    geom_col() +
+    geom_text(aes(label = n), hjust = -0.25) +
+    coord_flip() 
+```
+
+Cool, but now the numbers are cut off on the right side! To fix this we just set the `ylim()` (remember we've flipped the axes) a little higher to give room for the text.
+
+```{r}
+ufos |> 
+    count(day_part) |> 
+    na.omit() |> 
+    ggplot(aes(day_part, n)) +
+    geom_col() +
+    geom_text(aes(label = n), hjust = -0.25) +
+    coord_flip() +
+    ylim(0, 55000)
+```
+
+Better! Flipping can be used for any kind of plot, but I use it most with bar charts. 
+
+By now you should be starting to see how plotting can take some time to get right. But it is well worth it to get a beautiful plot in the end. And the great thing is that because we are doing this with code that we can save for later, once we do it one time we can reproduce it again any time we like in a matter of seconds. The time we put in now is an investment that will pay off in all the future time we will be saving (for ourselves and others). 
+
+### Styling bars
+
+There are many more things we can do, such as change the fill and border colors and the width of the bars, clean up the theme, etc. For example:
+
+```{r}
+ufos |> 
+    count(day_part) |> 
+    na.omit() |> 
+    ggplot(aes(day_part, n)) +
+    geom_col(fill = "orchid", color = "black", width = .7) +
+    geom_text(aes(label = n), hjust = -0.25) +
+    coord_flip() +
+    ylim(0, 55000) +
+    labs(x = "", y = "Number of sightings") +
+    theme_classic()
+```
+
+
+## Pie Charts
+
+Don't use pie charts (or use them *very* carefully)! **There is almost always a better way to visualise your data than a pie chart...**
+
+Pros:
+
+- Um, I guess they *can* be visually appealing for showing proportions, provided the number of groups is small.
+
+Cons:
+
+- Hard to compare slices, especially with many segments. Humans are not good at ascribing quantitative value to 2-dimensional space
+- Much less precise for numerical comparisons than bar charts.
+
+# Quantitative data
+
+The next dataset contains nutritional information collected (in 2021) from the official Starbucks Coffee Company's published data. You can find more on the Tidy Tuesday page [here](https://github.com/rfordatascience/tidytuesday/blob/main/data/2021/2021-12-21/readme.md).
+
+```{r}
+# I set `show_col_types = FALSE` here because I find the messages annoying
+starbucks <- read_csv(
+  'https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-12-21/starbucks.csv',
+  show_col_types = FALSE
+  )
+
+# Check:
+starbucks
+```
+
+
+There is lots of numeric data in here that we can look at.
+
+## Histograms
+
+Histograms are typically used to show the distribution of a continuous variable in terms of bars. Basically, we sort the data into bins and show the number of observations that fall within each bin. 
+
+Pros:
+
+- Excellent for showing the distribution of a single variable.
+- Useful for identifying patterns (e.g. skewness, multi-modality).
+
+Cons:
+
+- Only works with continuous or grouped data.
+- Choice of bin size or width can affect interpretation.
+
+
+For instance, let's look at the caloric values of all the drinks that Starbucks has. Rather than simply ask the average calories in a Starbucks drink, we can look at how the caloric values vary over the entire dataset. That is, we look at the **distribution** of caloric values over all Starbucks drinks.
+
+We can use `geom_histogram()` to plot the distribution of calories in the different Starbucks offerings. We *could* create these bins ourselves and use `geom_col()`, but why waste time with that? 
+
+```{r}
+# don't worry about the message, "`stat_bin()` using `bins = 30`. Pick better value with `binwidth`."
+starbucks |> 
+    ggplot(aes(x = calories)) +
+    geom_histogram(fill = "steelblue", color = "white")
+```
+
+What these bars are showing us is the number of drinks whose calories fall within some range of calorie values. We can see that there are many drinks with very few calories (the tall bar around 0), many more with between 100 and 300 calories, and a diminishing number with more than 400 or so. Now, this is nice, but the picture can change depending on how we **bin** the data ([wikipedia](https://en.wikipedia.org/wiki/Data_binning)), that is how we determine the range of calorie values to count over. 
+
+We change how the values are binned by either 
+
+a. defining the total number of bins to use, or 
+b. setting the width of the intervals into which to bin the data. 
+
+Which one makes more sense will depend on the data and what you wish to emphasize. The second method can be useful when there are meaningful or conventional breakpoints in the data---for example binning years by decade. Just beware that the picture can change depending on your binning.
+
+The first method breaks the data up into *n* equidistant bins and shows the counts for each. For example, we can show the *deciles* of our calorie data, by counting drinks in the lowest 10% oc calorie counts, then those drinks within the lowest 11-20%, and so on up to 91-100% --- so 10 total bins. We do this by setting `bins = 10`.
+
+```{r}
+# Option (a) fixed NUMBER of total bins/bars
+starbucks |> 
+    ggplot(aes(x = calories)) +
+    geom_histogram(bins = 10, 
+                   fill = "steelblue", color = "white") +
+    ggtitle("Set `bins = 10`")
+```
+
+<!-- In this case, the bin boundaries (the width of the bars) are determined by the distribution in the data. If you're curious what the boundary values of these bars are, you can find it like so: -->
+
+<!-- ```{r} -->
+<!-- quantile(starbucks$calories, probs = seq(0, 1, .1)) -->
+<!-- ``` -->
+
+Alternatively, we may want to break the data up by specific intervals. For example, we could sort our drinks into 20-calorie intervals (I don't know if this number makes sense from a dietary point of view; I just picked it at random). We do this by setting the `binwidth` argument, in this case `binwidth = 20`. So starting from the left, the first bar counts drinks with calorie counts from 0 to 19, the next bar shows those from 20 to 39, and so on. We get a very different picture now...
+
+```{r}
+# Option (b) - fixed RANGE of x values in bins/bars
+starbucks |> 
+    ggplot(aes(x = calories)) +
+    geom_histogram(binwidth = 20, fill = "steelblue", color = "white") +
+    ggtitle("Set `binwidth = 20`")
+```
+
+# Set the global theme
+
+Before we move on, let's fix that horrible grey background. We can set the theme for an R session with the `theme_set()`.
+
+```{r}
+theme_set(theme_classic())
+```
+
+Now all our plots will have the classic theme by default.
+
+# Plotting data with two variables
+
+One of the most fundamental questions we often ask is *"What is the relationship between A and B?"*. **Bivariate graphs** are what we need to display the relationship between two variables in our data. Making good plots will depend on the kinds of variables you have (categorical or quantitative) and the nature of what those variables represent, e.g. ordered groups, frequencies, measurements, time, etc.
+
+## Grouped bar charts (categorical and categorical)
+
+Let's go back to our UFOs data. Here we're just look at data from two countries, the UK and USA, and plot the frequencies of sightings by time of day. We'll filter by `country_code` and then count both `country` and `day_part`.
+
+There are several ways we could show these patterns, but I'm going to use **facets** to create subplots for each country. I'll also tell it to color by country too.
+
+```{r}
+ufos |> 
+    filter(country_code %in% c("GB", "US")) |> 
+    count(country, day_part) |> 
+    na.omit() |> 
+    ggplot(aes(day_part, n, fill = country)) +
+    geom_col(color = "black", width = .7) +
+    coord_flip() +
+    labs(x = "", y = "Number of sightings") +
+    theme_classic() +
+    facet_wrap(~country)
+```
+
+Ok, but there seem to be *way* more sightings in the USA than in the UK. The difference is so great that we can barely tell anything about the relative frequencies *within* the UK. We can tell ggplot to let the scales of the x axis vary for each subplot.
+
+```{r}
+ufos |> 
+    filter(country_code %in% c("GB", "US")) |> 
+    count(country, day_part) |> 
+    na.omit() |> 
+    ggplot(aes(day_part, n, fill = country)) +
+    geom_col(color = "black", width = .7) +
+    coord_flip() +
+    labs(x = "", y = "Number of sightings") +
+    theme_classic() +
+    facet_wrap(~country, scales = "free_x") +
+    guides(
+        fill = "none"
+    )
+```
+
+What's cool is that the relative patterns in the bars seem to be almost identical across the two countries. What we need to be **very careful about** is the fact that **the values on the x axes of the two plots show very different ranges**.
+
+
+
+## Scatter plots (numeric and numeric data)
+
+Scatter plots are useful for showing relationships between two continuous variables. We've all seen these before many times.
+
+Let's keep with the `starbucks` data and look at the relationship between total fat in grams (`tota_fat_g`) and total calories. **We can reflect on what the shape might look like, before we even start plotting**---probably a rough cloud of points moving from the lower left (low fat / low calories) to the upper right (high fat / high calories). In other words, we can use what we know about fat and calories to give us a general idea of how the plot *should* turn out, and use that as a quick sanity check to make sure our code is working as intended. **We use our subject knowledge to guide our analysis.**
+
+```{r}
+starbucks |> 
+    ggplot(aes(x = total_fat_g, y = calories)) +
+    geom_point()
+```
+
+Hmm... That is kind of what I envision, but the regularity along the x-axis indicated by the vertical "stripes" is unexpected... 
+
+:::{.callout-tip}
+Before moving on, we should stop and think about what is going on here. What does these patterns mean, and why might our data look like this? How could we explore our data to see what is going on.
+:::
+
+Let's try some other columns...
+
+```{r}
+# total carbs by calories
+starbucks |> 
+    ggplot(aes(x = total_carbs_g, y = calories)) +
+    geom_point()
+```
+
+```{r}
+# caffeine by calories
+starbucks |> 
+    ggplot(aes(x = caffeine_mg, y = calories)) +
+    geom_point()
+```
+
+```{r}
+# total carbs by calories and size
+starbucks |> 
+    filter(size %in% c("tall", "grande", "venti")) |> 
+    ggplot(aes(x = total_carbs_g, y = calories, color = size)) +
+    geom_point()
+```
+
+Above we mapped the drink size values in the data to the aesthetic `colour`. Compare this to a plot where we map drink size to the aesthetic of point `shape`. 
+
+```{r}
+starbucks |> 
+    filter(size %in% c("tall", "grande", "venti")) |>
+    ggplot(aes(x = total_carbs_g, y = calories, shape = size)) +
+    geom_point()
+```
+
+Which do you think is more effective, and why?
+
+
+## Boxplots (numeric and categorical)
+
+Box and whisker plots (otherwise known as boxplots), are graphs summarising the distribution of a set of values. The shape of the boxplot shows how the data is distributed and it also shows any outliers. 
+
+![Explanation of a boxplot](../_images/boxplot-interpretation.png){fig-alt="source: https://datatab.net/tutorial/box-plot"}
+
+Boxplots are a useful way to compare different sets of data as you can draw more than one boxplot per graph. These can be displayed alongside a number line, horizontally or vertically.
+
+Let's look at how calories are distributed across the drinks of the three main sizes `c("tall", "grande", "venti")`. Again, we should *think* about what we expect to see...
+
+```{r}
+starbucks |> 
+    filter(size %in% c("tall", "grande", "venti")) |> 
+    ggplot(aes(x = size, y = calories)) +
+    geom_boxplot(fill = "#866151", width = .5)
+```
+
+Does this fit your expectations?
+
+It's better to arrange the sizes in their natural order, so we'll convert this to a factor and assign a specific order to the size levels.
+
+```{r}
+starbucks |> 
+    filter(size %in% c("tall", "grande", "venti")) |> 
+    mutate(size = factor(size, levels = c("tall", "grande", "venti"))) |> 
+    ggplot(aes(x = size, y = calories)) +
+    geom_boxplot(fill = "#866151", width = .5)
+```
+
+Let's get fancier. We'll add a layer of points for each observation, and we'll **jitter** their position on the x axis. Then we'll give our points and boxess some transparency by setting `alpha`. Alpha values go from 0 (completely transparent) to 1 (completely opaque). Then I'll customise the `theme()` by making the text larger and removing the x-axis line. Finally I edit the axis labels.
+
+```{r}
+starbucks |> 
+  filter(size %in% c("tall", "grande", "venti")) |> 
+  mutate(size = factor(size, levels = c("tall", "grande", "venti"))) |> 
+  ggplot(aes(x = size, y = calories)) +
+  geom_point(position = position_jitter(width = .1), alpha = .4, color = "#90695a") +
+  geom_boxplot(fill = "#866151", width = .5, alpha = .8) +
+  theme(
+    axis.text = element_text(size = 12, color = "black"),
+    axis.title = element_text(size = 12, color = "black"),
+    axis.line.x = element_blank(),
+    axis.ticks.x = element_blank()
+  ) +
+  labs(x = "", y = "Calories")
+```
+
+Why might we do this? Is the information conveyed by the points necessary? Is the information conveyed by the boxplots?
+
+
+## Line plots (numeric and numeric/categorical data)
+
+Line plots also visualise relationships between continuous/numeric variables, and they are particularly great for showing **trends** and changes in data over time and categories.
+
+To illustrate these let's go back to the baby names data.
+
+First load in the data and take a look.
+
+```{r}
+baby_names <- here("data", "baby_names_top100_eng_wales.csv") |> 
+    read_csv()
+
+baby_names
+```
+
+So let's plot the trend in popularity for the first two names in 1996: "Jack" and "Sophie". How have the rankings of these names changed since 1996?
+
+We can start with a scatterplot.
+
+```{r}
+baby_names |> 
+    filter(name %in% c("Sophie", "Jack")) |> 
+    ggplot(aes(x = year, y = rank)) +
+    geom_point()
+```
+
+Of course, there is a natural tendency for us to mentally find patterns in images like this --- to "connect the dots" essentially. So let's just embrace that instinct by representing this data with a continuous line .
+
+The standard geom for lines is `geom_line()`, and we'll just use that instead of a point geom.
+
+```{r}
+baby_names |> 
+    filter(name %in% c("Sophie", "Jack")) |> 
+    ggplot(aes(x = year, y = rank)) +
+    geom_line()
+```
+
+Hmmm... This is not what we expected, is it? We're getting this because we have two names so we have **two observations for each year**, and ggplot is trying to draw a line between all these points. We want separate lines for each name, so we need to tell this to ggplot.
+
+We can include `aes(group = name)` inside our geom to tell it to group the lines by `name` like so:
+
+```{r}
+baby_names |> 
+    filter(name %in% c("Sophie", "Jack")) |> 
+    ggplot(aes(x = year, y = rank)) +
+    geom_line(aes(group = name))
+```
+
+But which is which? Let's instead map `name` to some aesthetic, either color or linetype.
+
+```{r}
+baby_names |> 
+    filter(name %in% c("Sophie", "Jack")) |> 
+    ggplot(aes(x = year, y = rank)) +
+    geom_line(aes(color = name))
+```
+
+```{r}
+baby_names |> 
+    filter(name %in% c("Sophie", "Jack")) |> 
+    ggplot(aes(x = year, y = rank)) +
+    geom_line(aes(linetype = name))
+```
+
+Let's change the 
+
+We could add points to the plot, combining the two above to get this:
+
+```{r}
+baby_names |> 
+    filter(name %in% c("Sophie", "Jack")) |> 
+    ggplot(aes(x = year, y = rank)) +
+    geom_line(aes(linetype = name), linewidth = 1) +
+    geom_point()
+```
+
+In this case the points are only really adding unnecessary "ink" to the plot, but it does't interfere too much and I like the effect it has on the dotted line.
+
+But is this a good way to show what we want? Remember we're showing the popularity **ranks** of these names. What we know from the data is that the popularity of these names, as represented in their rankings, has been *decreasing* over the years, yet the plot shows lines that are *increasing*. There is a mismatch between our natural intutions and visual/cognitive processing and how the data are mapped to space in the plot. 
+
+We should really **reverse** the y values to show a declining trend. How do we do this? The easiest way to do this is is with `scale_y_reverse()`:
+
+```{r}
+baby_names |> 
+    filter(name %in% c("Sophie", "Jack")) |> 
+    ggplot(aes(x = year, y = rank)) +
+    geom_line(aes(linetype = name), linewidth = 1) +
+    geom_point() +
+    scale_y_reverse() +
+    # add nicer axis labels
+    labs(
+        x = "Year",
+        y = "Rank in popularity"
+    )
+```
+
+This seems much more intuitive. We can tweak the break points on the y scale to start at 1.
+
+```{r}
+baby_names |> 
+    filter(name %in% c("Sophie", "Jack")) |> 
+    ggplot(aes(x = year, y = rank)) +
+    geom_line(aes(linetype = name), linewidth = 1) +
+    geom_point() +
+    scale_y_reverse(breaks = c(1, seq(10, 50, 10))) +
+    # add nicer axis labels
+    labs(
+        x = "Year",
+        y = "Rank in popularity"
+    )
+```
+
+
+
+
+
+
+
+
+
+
+

@@ -1,0 +1,323 @@
+---
+title: "Data visualization with ggplot"
+subtitle: "Data Skills for the Digital World: Week 3" 
+author: "Jason Grafmiller<br>[j.grafmiller@bham.ac.uk](mailto:j.grafmiller@bham.ac.uk)"
+date: "Last updated: `r format(Sys.Date(), '%d %B %Y')`"
+format:
+  html: 
+    toc: true
+    toc-location: left
+    theme: 
+      light: flatly
+      dark: darkly
+    mainfont: 'Roboto'
+    fontsize: 100%
+    df-print: paged
+    code-copy: true
+    code-tools:
+      source: true
+      toggle: true
+      caption: "code"
+    css: "styles/custom_bib.css"
+    include-in-header: "styles/roboto_serif.html"
+    include-after-body: "styles/footer.html"
+    embed-resources: true
+knitr:
+  opts_chunk: 
+    # cache.path: "../cache/"
+    # fig.path: "../figures/"
+    comment: "#>"
+    tidy: styler
+    fig.retina: 2
+    fig.width: 6
+execute:
+  echo: true
+  warning: false
+  message: false
+  cache: false
+tbl-cap-location: top
+fig-cap-location: bottom
+filters:
+  - lightbox
+lightbox: auto
+bibliography: [references.bib, data_skills_refs.bib]
+link-citations: true
+csl: unified-style-linguistics.csl
+---
+
+```{r}
+#| echo: false
+source("_common.R")
+```
+
+# Preliminaries
+
+As always, begin a new RStudio session, open a new R script and save it.
+
+# The grammar of graphics
+
+The "grammar of graphics" is a framework for thinking about data visualization that breaks down the process of creating a graphic into a set of fundamental components, much like how grammar organizes language. It was popularized by Leland Wilkinson [@wilkinson_grammar_2005] and serves as the foundation for many modern visualization tools, including the R package `{ggplot2}` (that's what the "gg" stands for).
+
+At its core, the grammar of graphics emphasizes that any chart or graph can be constructed by combining key elements: **data**, **geometries** (shapes like points, lines, or bars that represent the data), **aesthetic mappings** (how data attributes are visually represented, such as mapping a variable to the x-axis, y-axis, color, or size), and **scales** (which determine how data values are translated into visual properties). Additional layers, like statistical transformations or facets (splitting data into subplots), allow for more complex visualizations.
+
+A visual summary of the concept looks like this:
+
+![Seven layers of the grammar of graphics. Source: <https://blog.gramener.com/grammar-of-graphics-data-stories/amp/>](../_images/grammar_of_graphis.png){#fig-gg fig-alt="source: https://blog.gramener.com/grammar-of-graphics-data-stories/amp/"}
+
+ This approach is flexible and systematic, and it provides a clear and consistent way to think about how data becomes a visual representation. Instead of memorizing specific chart types, we can focus on how the components work together, fostering creativity and understanding of visualization design. `{ggplot2}` has arguably become *the* standard approach for creating graphs and charts in R (but it is certainly not the only approach), and I prefer it greatly to other tools I've used in R and Python.
+
+
+# Basic plotting with ggplot2
+
+We'll start by loading our packages and some data. 
+
+```{r}
+library(here) # for file path management
+library(tidyverse)
+```
+
+Our baby names dataset:
+
+```{r}
+baby_names <- read_csv(here("data", "baby_names_top100_eng_wales.csv"))
+```
+
+Let's start by looking at the number of babies with the top names each year. 
+
+```{r}
+top_names <- baby_names |> 
+  filter(rank == 1)
+
+top_names
+```
+
+As a first pass, we'll make a bar plot out of this. We build our ggplot step by step beginning with the function `ggplot()`, defining a plot object that we then add layers to. The first argument of `ggplot()` is the dataset to use in the graph and so `ggplot(data = top_names)` creates an empty graph that is primed to display the  data.
+
+```{r}
+ggplot(data = top_names)
+```
+
+Next, we need to tell `ggplot()` how the information from our data will be visually represented. We tell it how to map the **aesthetics** of the plot. Here the `year` column will map to values on the x-axis and the `n` column will map to values on the y-axis. Aesthetics are defined in the `aes()` function.
+
+```{r}
+ggplot(data = top_names, aes(x = year, y = n))
+```
+
+## Geoms
+
+Now we define a **geom**etric object that the plot will use to represent the data. Geoms are the actual things we put on a plot. You can have an unlimited number of layers, but at a minimum a plot must have at least one geom. Common examples include:
+
+- `geom_point()` makes a scatter plot by adding a layer of points
+- `geom_line()` adds a layer of lines connecting data points
+- `geom_col()` and `geom_bar()` add bars for bar charts
+- `geom_boxplot()` adds boxes for boxplots
+
+Each type of geom usually has a required set of aesthetics to be set, and usually accepts only a subset of all aesthetics. These include:
+
+- position (i.e., on the x and y axes)
+- colour (points and lines, "outside" border of 2D shapes)
+- fill ("inside" color of 2D shapes)
+- shape (of points)
+- linetype (solid, dashed, dotted etc.)
+- size (of geoms)
+- label (for text)
+
+Here we want bars or **columns** (`geom_col()`) whose lengths show the values in the data.
+
+```{r}
+ggplot(data = top_names, aes(x = year, y = n)) +
+  geom_col()
+```
+
+We can colour the bars by `sex` by adding this to the `aes()` mapping with the `fill` argument.
+
+```{r}
+ggplot(data = top_names, aes(x = year, y = n, fill = sex)) +
+  geom_col()
+```
+
+These stacked bars are not good, so let's tell it to **position** the bars side-by-side (this is known in ggplot as "dodge").
+
+```{r}
+ggplot(data = top_names, aes(x = year, y = n, fill = sex)) +
+  geom_col(position = "dodge")
+```
+
+
+We can add other geom layers easily. Let's look at the data for just the name "Jack" and add the rank values for each year above the bars with `geom_text()`. Inside this geom we specify the mapping of the `rank` column to the `label` argument. 
+
+```{r}
+baby_names |> 
+  filter(name == "Jack") |> 
+  ggplot(aes(x = year, y = n)) +
+  geom_col() +
+  geom_text(aes(label = rank))
+```
+
+I'll add a **nudge** here to tell ggplot to nudge the text up on the y-axis by a little bit so we can see it. How much you need to nudge will depend on the range of values in the plot, and you usually have to play around with it.
+
+```{r}
+baby_names |> 
+  filter(name == "Jack") |> 
+  ggplot(aes(x = year, y = n)) +
+  geom_col() +
+  geom_text(aes(label = rank), nudge_y = 400)
+```
+
+Let's make the bars narrower, outline of the bars black, lighten their fill colour, and add a theme to make it look more sleek (there are [many built-in themes](https://ggplot2.tidyverse.org/reference/ggtheme.html)):
+
+```{r}
+baby_names |> 
+  filter(name == "Jack") |> 
+  ggplot(aes(x = year, y = n)) +
+  geom_col(width = .7, fill = "grey", colour = "black") +
+  geom_text(aes(label = rank), nudge_y = 400) +
+  theme_minimal()
+```
+
+## Facets
+
+We can also separate the sexes into individual subplots or **facets**. To facet your plot by a single variable, use `facet_wrap()`. The first argument of `facet_wrap()` is a formula object, which you create with `~` followed by a variable name. The variable that you pass to `facet_wrap()` should be categorical.
+
+```{r}
+ggplot(data = top_names, aes(x = year, y = n, fill = sex)) +
+  geom_col() +
+  facet_wrap(~sex)
+```
+
+This can be very useful. Suppose we want to look at the names "Jack", "Oliver", "Harry", "Sophie", "Emily", and "Amelia". I can filter my dataframe and then pipe into `ggplot()`. Then I facet by `name`
+
+```{r}
+baby_names |> 
+  filter(name %in% c("Jack", "Oliver", "Harry", "Sophie", "Emily", "Amelia")) |> 
+  ggplot(aes(x = year, y = n, fill = sex)) +
+  geom_col() +
+  facet_wrap(~name)
+```
+
+
+
+# Title and axis labels
+
+We can change the labels of the axes several ways. I like the `labs()` layer.
+
+```{r}
+baby_names |> 
+  filter(name == "Jack") |> 
+  ggplot(aes(x = year, y = n)) +
+  geom_col(width = .7, fill = "grey", colour = "black") +
+  geom_text(aes(label = rank), nudge_y = 400) +
+  theme_minimal() +
+  labs(x = "Year", y = "Count")
+```
+
+You can also specify a `title` or you can add a `ggtitle()` layer.
+ 
+
+```{r}
+baby_names |> 
+  filter(name == "Jack") |> 
+  ggplot(aes(x = year, y = n)) +
+  geom_col(width = .7, fill = "grey", colour = "black") +
+  geom_text(aes(label = rank), nudge_y = 400) +
+  theme_minimal() +
+  labs(x = "Year", y = "Count") +
+  ggtitle("Raw counts and ranking for the name 'Jack' in England and Wales")
+```
+
+You can include subtitles and captions too.
+
+```{r}
+baby_names |> 
+  filter(name == "Jack") |> 
+  ggplot(aes(x = year, y = n)) +
+  geom_col(width = .7, fill = "grey", colour = "black") +
+  geom_text(aes(label = rank), nudge_y = 400) +
+  theme_minimal() +
+  labs(x = "Year", y = "Count", subtitle = "Raw counts with overall rank",
+       caption = "Data from the Office of National Statistics") +
+  ggtitle("The name 'Jack' has been losing popularity in England and Wales")
+```
+
+
+# Colours
+
+To change colour mappings, you can use `scale_colour` and `scale_fill` layers to set the colours. 
+
+```{r}
+baby_names |> 
+  filter(name %in% c("Jack", "Oliver", "Harry", "Sophie", "Emily", "Amelia")) |> 
+  ggplot(aes(x = year, y = n, fill = sex)) +
+  geom_col() +
+  facet_wrap(~name) +
+  scale_fill_manual(values = c("purple", "orange")) +
+  theme_minimal()
+```
+
+You can find the color names R uses here:
+
+```{r}
+colors()
+```
+
+`scale_fill_manual` requires you to set the values, but there are other default scales available. 
+
+```{r}
+baby_names |> 
+  filter(name %in% c("Jack", "Oliver", "Harry", "Sophie", "Emily", "Amelia")) |> 
+  ggplot(aes(x = year, y = n, fill = sex)) +
+  geom_col() +
+  facet_wrap(~name) +
+  scale_fill_brewer(palette = "Dark2") +
+  theme_minimal()
+```
+
+```{r}
+baby_names |> 
+  filter(name %in% c("Jack", "Oliver", "Harry", "Sophie", "Emily", "Amelia")) |> 
+  ggplot(aes(x = year, y = n, fill = sex)) +
+  geom_col() +
+  facet_wrap(~name) +
+  scale_fill_brewer(palette = "Set1") +
+  theme_minimal()
+```
+
+
+# Saving plots
+
+The first (and easiest) is to export directly from the RStudio ‘Plots’ panel, by clicking on Export when the image is plotted. This will give you the option of an image file (e.g. `.png` or `.jpg` or `.svg`) or `.pdf` and selecting the directory to which you wish to save it to. It's often recommended that you save images as `.pdf` types as these won’t pixelate when you change the image size, however these may not work well with other tools like Powerpoint or Word
+
+Another way to save a ggplot figure is to use the `ggsave()` function. Just create your plot and save it as an object, and then save it with `ggsave()`
+
+```{r}
+jack_names_plot <- baby_names |> 
+  filter(name == "Jack") |> 
+  ggplot(aes(x = year, y = n)) +
+  geom_col(width = .7, fill = "grey", colour = "black") +
+  geom_text(aes(label = rank), nudge_y = 400) +
+  theme_minimal() +
+  labs(x = "Year", y = "Count", subtitle = "Raw counts with overall rank",
+       caption = "Data from the Office of National Statistics") +
+  ggtitle("The name 'Jack' has been losing popularity in England and Wales")
+
+ggsave(
+  filename = "my_first_names_plot.png",
+  plot = jack_names_plot,
+  width = 6,
+  height = 4
+)
+```
+
+If you don’t specify the width and height they will be taken from the dimensions of the current plotting device. For reproducible code, you'll want to specify them. You can learn more about `ggsave()` in the documentation. 
+
+Just be aware that the saved file may not look like you intend, so you may have to play with the size some. To be honest though, understanding how text size and resolution work in ggplot2 can be a [massive headache](https://www.christophenicault.com/post/understand_size_dimension_ggplot2/) and huge time suck. You've been warned...
+
+# Customizing plots
+
+We'll see lots more about plotting as we go, but this can be daunting for beginners. Thankfully there are packages like [`{esquisse}`](https://dreamrs.github.io/esquisse/) and [`{ggthemeassist}`](https://github.com/calligross/ggthemeassist) that offer RStudio plugins that create a graphic interface for editing ggplots. I haven't used them much, but they could be very helpful.
+
+In the next session(s) we'll take a look at more of the aspects of ggplot and see how to tweak things to make really nice plots.
+
+
+
+

@@ -1,0 +1,597 @@
+---
+title: "Working with tidy dataframes"
+subtitle: "Data Skills for the Digital World: Week 2" 
+author: "Jason Grafmiller<br>[j.grafmiller@bham.ac.uk](mailto:j.grafmiller@bham.ac.uk)"
+date: "Last updated: `r format(Sys.Date(), '%d %B %Y')`"
+format:
+  html: 
+    toc: true
+    toc-location: left
+    theme: 
+      light: flatly
+      dark: darkly
+    mainfont: 'Roboto'
+    fontsize: 100%
+    df-print: paged
+    code-copy: true
+    code-tools:
+      source: true
+      toggle: true
+      caption: "code"
+    css: "styles/custom_bib.css"
+    include-in-header: "styles/roboto_serif.html"
+    include-after-body: "styles/footer.html"
+    embed-resources: true
+knitr:
+  opts_chunk: 
+    # cache.path: "../cache/"
+    # fig.path: "../figures/"
+    comment: "#>"
+    tidy: styler
+execute:
+  echo: true
+  warning: false
+  message: false
+  cache: false
+tbl-cap-location: top
+fig-cap-location: bottom
+filters:
+  - lightbox
+lightbox: auto
+bibliography: [references.bib, data_skills_refs.bib]
+link-citations: true
+csl: unified-style-linguistics.csl
+---
+
+# Preliminaries
+
+Before you go further, close RStudio and restart your RStudio Project (whatever its called). If you are already working in your project, you can type `Ctrl/Cmd+Shift+F10` to restart the R console. Either one of these will give you a fresh environment to work with. The "Environment" should show nothing in it.
+
+## On naming files
+
+Next open a new R script with "File" > "New File..." > "R script", or type `Ctrl/Cmd+Shift+N`. This will be the file that we will be writing our code in, and we will save this script so that we can reproduce exactly what we did later. But first it's worht thinking about how to name files in a way that will help us stay organised (I will admit that it took me an embarassingly long time to appreciate the value of good file-naming).
+
+File names should be meaningful and end in `.R`. Avoid using special characters in file names---stick with numbers, letters, `-`, and `_`. DO NOT use spaces in file names.
+
+```
+# Good
+collect_census_data.R
+utility_functions.R
+
+# Bad
+collect census data.R
+foo.r
+stuff.r
+```
+
+If you have files that should be run in a particular order, prefix them with numbers.
+
+```
+00_download.R
+01_explore.R
+...
+09_model.R
+10_visualize.R
+```
+
+Really, these guidelines apply to all kinds of files, including data files, documents, etc. It never hurts to stay organized!
+
+Good file names should:
+
+1. **Be Machine Readable.** Names should be easy to search, easy to filter, and easy to extract info from, e.g. by splitting. So names should **avoid** spaces, accented characters, and punctuation (other than `_` or `-`)
+2. **Be Human Readable.** it should be easy to figure out what something is, based on its name
+3. **Follow default ordering conventions**. Generally this means put something numeric first, use ISO 8601 date standard, and pad numbers with zeros (e.g. order months from `01`, `02`, ..., `12` **not** `1`, `2`, ...).
+
+!["ISO-8601" <https://xkcd.com/1179/>](../_images/iso_8601_2x.png){width="50%"}
+
+You can find a more detailed discussion of these in [Wickham et al. 2023: 6.1.3](https://r4ds.hadley.nz/workflow-scripts#saving-and-naming).
+
+So once we create a new script, let's save it with a meaningful name, something like `02-01_data_skills_tidy_dataframes.R`. 
+
+
+# The tidyverse
+
+Now the real fun can begin!
+
+For this course we'll be following the **tidy** approach to R syntax developed by Hadley Wickham. The majority of the methods that we'll over are part of the so-called "tidyverse". The [tidyverse](https://www.tidyverse.org/) can be described as 
+
+> an opinionated collection of R packages designed for data science. All packages share an underlying design philosophy, grammar, and data structures.
+
+![The tidyverse](../_images/tidyverse.png){width=75%}
+
+Most of these were originally developed by Hadley Wickham himself, but they've been expanded upon by a number of other contributors. The advantages of the tidyverse include functions with a consistent naming style and syntax that is transparent and easy to learn and use. They are all designed to work with tidy data, which offers a parsimonious approach to the development of data science tools, and the possibility of greater productivity and learnability.
+
+You can install the complete tidyverse with a single line of code:
+
+```{r}
+#| eval: false
+install.packages("tidyverse")
+```
+
+This may take a sec, as it will load lots of dependencies (this can be seen as one limitation of this approach). Once it's installed you can load it like so.
+
+```{r}
+library(tidyverse)
+```
+
+You'll get a message noting that a number of core packages are loaded, and we'll make use of many of these as we go. It's important to remember that these packages must be loaded to use their functions, so it's a good idea from now on to start any new R session by loading the `tidyverse` packages. 
+
+In this session I'll show you how to do things the tidy and the non-tidy way because I think it's good to see that (a) there are multiple ways of doing things in R and neither are necessarily right or wrong, and (b) the tidy way is often more consistent and yields nicer output. In the rest of the course, I'll mainly use only the tidy functions, but I'll point out especially useful other functions occasionally.
+
+# Pipes
+
+In modern R coding, you'll likely see lots of people, including yours truly, making extensive use of the **pipe**. These days, the pipe is R’s most important operator for data processing. 
+
+A pipe, written in R as `|>`, take the output of one function and pass it into another function as an argument.  So the pipe takes the thing on its left and passes it along to the first argument of the function on its right. The basic idea is that pipes link together all the steps in data analysis making the code more efficient and readable. 
+
+Consider the case of the following character vector representing ages of participants in a study. 
+
+```{r}
+ages_str <- c("47", "32", "26", "41", "38", "28", "29", "31")
+```
+
+Suppose we want to calculate the mean (average) age of our participants. To do this we'd first need to convert this to a numeric vector with `as.numeric()`, then apply the `mean()` function to the output.
+
+```{r}
+ages_num <- as.numeric(ages_str)
+mean(ages_num)
+```
+
+Alternatively, we could do it in one line by *nesting* our functions like so:
+
+```{r}
+mean(as.numeric(ages_str))
+```
+
+
+```{r}
+ages_str |> 
+  as.numeric() |> 
+  mean()
+```
+
+
+:::{.callout-note}
+
+`|>` vs. `%>%`
+
+You may see pipes sometimes written as `%>%` in older R scripts. This is the way pipes used to be written when they were first developed as part of the `{magtrittr}` package (also part of the tidyverse). In the old days (i.e. before 2021) `%>%` was the only pipe operator, and so this package had to be installed and loaded in order to use it. But pipes proved so popular that the core R team decided to introduce a "native" pipe operator (`|>`) in R version 4.1.0 and later. The native pipe comes built into the core of R, so no additional packages are needed, which is good. Just be aware that there are some [subtle differences](https://www.tidyverse.org/blog/2023/04/base-vs-magrittr-pipe/) in how `|>` and `%>%` work that *may* cause issues if you try to use older code. We will only use the `|>` in this course.
+:::
+
+
+# What are dataframes? 
+
+Data frames are the *de facto* data structure for most tabular data in R. A dataframe can be created by hand, but most commonly they are generated by reading in a data file.
+
+A data frame is the representation of data in the format of a table where the columns are vectors of the same length. Because columns are vectors, each column must contain a single type of data (e.g., numeric, character, integer, logical).
+
+A dataframe consists of multiple vectors of the same length as columns, but these can be of any type. Let's create one from scratch containing information about members of the bacd the Beatles:
+
+```{r}
+beatles <- data.frame(
+    first_name = c("John", "Paul", "Ringo", "George"),
+    last_name = c("Lennon", "McCartney", "Starr", "Harrison"),
+    instrument = c("guitar", "bass", "drums", "guitar"),
+    yearOfBirth = c(1940, 1942, 1940, 1943),
+    deceased = c(TRUE, FALSE, FALSE, TRUE)
+)
+beatles
+```
+
+The **tibble** is an improved version of the base R dataframe, and it comes from the `tibble` library. If you haven’t already, go ahead and install and load the library now. 
+
+```{r}
+#| eval: false
+install.packages('tibble')
+library(tibble)
+```
+
+A tibble works just like a dataframe, but it has a few small features that make it a bit more useful. We will be using tibbles as our default dataframe structure.
+
+You can convert a dataframe to a tibble with `as_tibble()`, or convert a tibble to a data frame with `as.data.frame()`
+
+```{r}
+as_tibble(beatles)
+```
+
+This latter can be useful if some function will not work with tibbles for some reason (this is rare).
+
+Just like with dataframes, you can create a tibble using the `tibble()` function:
+
+```{r}
+beatles <- tibble(
+    first_name = c("John", "Paul", "Ringo", "George"),
+    last_name = c("Lennon", "McCartney", "Starr", "Harrison"),
+    instrument = c("guitar", "bass", "drums", "guitar"),
+    year_of_birth = c(1940, 1942, 1940, 1943)
+)
+beatles
+```
+
+
+# Reading data into R {#sec-loading-data}
+
+Many packages include datasets as well as functions, and the base R distribution includes a `{datasets}` package that contains numerous datasets for users to practice with. Some common ones include `iris` and `mtcars`. You can find out more about these with `?iris` or `?mtcars`. But we'll want to use our own data, of course.
+
+:::{.callout-warning}
+Make sure you have downloaded the course datasets in `data.zip` and put those into a `data` folder inside your project directory.
+:::
+
+Loading a dataset into R is an essential first step in data analysis, and we'll want to make sure that our files are in the proper format for reading into R. We need to do two things: 
+
+1. You want to save the data in a useable format. The preferably the format is CSV (`.csv`), but another common format is a tab-separated file, which can be `.txt` or `.tsv`, and R works natively with either of these. There are also of course Excel spreadsheets (`.xlsx`), but [it is **not** recommended that you use Excel files for data analysis](https://www.youtube.com/watch?v=TGAUZQJaQbQ). If you use Excel, and we all do, I recommend that you save your spreadsheet as a `.csv` file and then *never opening that file again in Excel*. you can read Excel spreadsheets directly into R, but you'll need the `{readxl}` [package](https://readxl.tidyverse.org/). 
+2. Make note of where the file sits in our system, i.e. it's **file path**. You will need this.
+
+Once you have your data and file path, you can read it into R easily. Let's start with the `baby_names_top100.csv` dataset containing the top 100 most popular baby names in England and Wales from 1974 to 2023.[^fn1]
+
+[^fn1]: I got the data for 1974 to 2020 from the `{ukbabynames}` package. I then got the data for 2021-23 (for England and Wales only) from the Office for National Statistics [website](https://www.ons.gov.uk/peoplepopulationandcommunity/birthsdeathsandmarriages/livebirths) and consolidated it with the package dataset.
+
+You'll need to download this file and put it somewhere. If you want to keep it in your workign directory, you can load it like so:
+
+```{r}
+baby_names <- read.csv("baby_names_top100_eng_wales.csv")
+```
+
+If the file is elsewhere, you'll need to provide the full file path:
+
+```{r}
+#| eval: false
+baby_names <- read.csv("C:/path/to/baby_names_top100_eng_wales.csv")
+```
+
+The `{readr}` package has functions `read_csv()` which give you slightly more information and read this as a tibble automatically.
+
+```{r}
+baby_names <- read_csv("baby_names_top100_eng_wales.csv")
+```
+
+```{r}
+baby_names
+```
+
+I nice thing about `read_csv()` is that you can use it to read dataset directly from the web. All you need is the URL address:
+
+```{r}
+starbucks <- read_csv("https://raw.githubusercontent.com/rfordatascience/tidytuesday/master/data/2021/2021-12-21/starbucks.csv")
+starbucks
+```
+
+
+# Writing (saving) data to files
+
+To save the data, we use the `write_*` functions.
+
+```{r}
+#| eval: false
+write_csv(baby_names, file = "baby_names_top100_eng_wales.csv")
+```
+
+For a tab-delimited format, we use `write_delim()` and set the `delim` argument to the tab character `"\t"`. The file extension for these kinds of files is `.txt` of `.tsv`
+
+```{r}
+#| eval: false
+write_delim(baby_names, file = "baby_names_top100_eng_wales.tsv", delim = "\t")
+```
+
+Just be aware that **most write functions will overwrite existing files**. This is why it's important to give your new output file a different name!
+
+:::{.callout-note}
+
+There are a number of other (better) options for fast reading and writing of very large datasets, and for saving to more compact file sizes, but we won't worry about those here. It's best to stick to the basics for now. See [here](https://csgillespie.github.io/efficientR/input-output.html) for some other examples and discussion. The `{data.table}` for example is great for lightning-fast processing of very large (millions of rows) datasets, but I find its syntax rather hard to learn and it does not always play well with tidyverse functions.
+
+:::
+
+
+# Inspecting dataframes (tibbles)
+
+When we are working with data, it's always important to inspect it first before doing anything. There are several ways to inspect dataframes. The simplest is just to call it, but this can get messy for larger dataframes.
+
+We can get the basic dimensions (rows and columns) of a dataframe with `dim()`, and `nrow()`, `ncol()`.
+
+```{r}
+# dimensions of the data in number of rows and columns
+dim(baby_names)
+```
+
+```{r}
+# number of rows
+nrow(baby_names)
+```
+
+```{r}
+# number of columns
+ncol(baby_names)
+```
+
+We can find the names of the columns with `names()`:
+
+```{r}
+names(baby_names)
+```
+
+Dataframes must have column names, but row names are optional (by default, row names are just a sequence of numbers). The `names()` function returns the column names, or you can also be more specific and use `colnames()` and `rownames()`.
+
+```{r}
+colnames(baby_names)
+```
+
+```{r}
+# the rownames are just numbers (but note that these are character strings)
+rownames(baby_names)
+```
+
+
+The `summary()` function can be helpful for getting an overview:
+
+```{r}
+summary(baby_names)
+```
+
+We can also use the tidyverse function `glimpse()`, or base R's `str()`. Both give similar kinds of information about the types of data in the data frame. As usual, the tidy option is a little clearer.
+
+```{r}
+glimpse(baby_names)
+```
+
+```{r}
+str(baby_names)
+```
+
+# Renaming columns
+
+Renaming columns can be done with tidy's `rename()` function.
+
+```{r}
+baby_names |> 
+  rename(count = "n")
+```
+
+
+
+# Selecting columns
+
+The `select()` function can be used to select columns. Let's select only the `year` and the `name` columns, *without* saving the results. With tidyverse functions, the first argument is always a dataframe/tibble.
+
+```{r}
+select(baby_names, year, name)
+```
+
+An alternative way of executing the same command is using a pipe. Here, the tibble `beatles` is piped to the select function, which then does not need to know about the tibble anymore and you can simply list the columns.
+
+```{r}
+baby_names |> 
+  select(year, name)
+```
+
+You can also select multiple columns in a row using the colon operator. Here, we are selecting only the columns from `sex` to `rank`:
+
+```{r}
+baby_names |> 
+  select(sex:rank)
+```
+
+You can use the column numbers (or **indices**) too. We can select the 1st, 3rd and 4th columns.
+
+```{r}
+baby_names |> 
+  select(c(1, 3, 4))
+```
+
+
+If you use minus, you can get rid of columns. Let's get rid of the `last_name` column and save this result by overriding the original `beatles`:
+
+```{r}
+baby_names <- select(baby_names, -nation)
+
+# Check:
+
+baby_names
+```
+
+The base R way is to use `[]` brackets. To get columns 1 and 3 we can a few options. The following lines do exactly the same thing
+
+```{r}
+# by index
+baby_names[, c(1,3)] # note the , placement
+
+# by name
+baby_names[, c("year", "name")]
+```
+
+
+# Extracting and adding columns
+
+We can extract columns by using a `$` followed by the column name. Notice that the output is a (massive) vector.
+
+```{r}
+baby_names$name
+```
+
+Alternatively, there is the tidy function `pull()` that does the same thing.
+
+```{r}
+pull(baby_names, name)
+```
+
+We can add columns by assigning them to the data frame like so. Let's go back to the `beatles` dataframe and add a column indicating whether they are deceased.
+
+```{r}
+beatles$deceased <- c(TRUE, FALSE, FALSE, TRUE)
+beatles
+```
+
+The tidy method uses the `mutate()` function to change the dataframe in various ways. 
+
+```{r}
+beatles <- beatles |> 
+  mutate(deceased = c(TRUE, FALSE, FALSE, TRUE))
+beatles
+```
+
+`mutate()` can be used to add new columns and it can also be used to edit the values in an existing column. For example, if we want to put the baby names in all caps, we can apply the `toupper()` function to the `name` column:
+
+```{r}
+baby_names |> 
+  mutate(name = toupper(name))
+```
+
+Note that inside these tidyverse functions, we use `=` and **not** the `<-` operator. 
+
+# Sorting, slicing, and filtering 
+
+## Sorting 
+
+We can **sort** data by columns with `arrange()`. Let's sort by `year`.
+
+```{r}
+arrange(baby_names, year)
+```
+
+To sort by descending order (largest to smallest), we use `desc()`.
+
+```{r}
+baby_names |> 
+  arrange(desc(year))
+```
+
+Now let's sort this first by `rank` then by `sex`, then by `year`:
+
+```{r}
+baby_names |> 
+  arrange(rank, sex, year)
+```
+
+## Slicing
+
+If you want specific rows, you can use the numbers (indices). So to get the first 4 rows, we can do this
+
+```{r}
+baby_names[1:2, ]
+```
+
+This is sometimes referred to as '**slicing**', hence the tidy `slice()` functions. Let's slice rows 2-8
+
+```{r}
+baby_names |> 
+  slice(2:8)
+```
+
+The first 6 rows:
+
+```{r}
+baby_names |> 
+  slice_head(n = 6)
+```
+
+The last 6 rows:
+
+```{r}
+baby_names |> 
+  slice_tail(n = 6)
+```
+
+Base R has functions `head()` and `tail()` that work similarly.
+
+```{r}
+head(baby_names, n = 6)
+```
+
+Negative values work too.
+
+```{r}
+baby_names |> 
+  slice(-2)
+```
+
+There is also `slice_sample()` which randomly selects `n` rows in your dataframe/tibble. H
+
+```{r}
+baby_names |> 
+  slice_sample(n = 10)
+```
+
+Do it again and we get a different sample. This can be useful for getting a quick look at your data.
+
+```{r}
+baby_names |> 
+  slice_sample(n = 10)
+```
+
+
+## Filtering
+
+
+You can get a subset of rows matching certain conditions with the tidy function `filter()`. The second argument of the `filter()` is the **condition** that we use to identify the relevant rows. Let's look at only the names for girls  with `sex == "F"`.
+
+```{r}
+baby_names |> 
+  filter(sex == "F")
+```
+
+Alternatively we can filter on those that are not deceased.
+
+```{r}
+baby_names |> 
+  filter(sex != "F")
+```
+
+We can combine conditions too. Filter girl names from the years 1996, 2000, 2004, and 2008. Here we use `%in%` to filter for rows whose `year` value is "in" the set `c(1996, 2000, 2004, 2008)`.
+
+```{r}
+baby_names |> 
+  filter(sex == "F", year %in% c(1996, 2000, 2004, 2008)) |> 
+  arrange(name) # sort by names
+```
+
+
+As we go we'll see more on how to filter data.
+
+# Pivoting
+
+The last thing we'll cover is how to reshape your data into wider or longer format. Going from a wide to long format, or vice versa, can be tricky. 
+
+We'll start with a dummy examples case of 10 students in Maths and History classes. Which format is this in, long or wide?
+
+```{r}
+classes <- data.frame(
+  PersonID = c("Emily", "Kifaaya", "Britanny", "Dylan", "Cody", "Alexis", 
+               "Salma", "Barbara", "Ramon", "Haniyya"),
+  Math = c(57L, 50L, 52L, 52L, 47L, 49L, 55L, 48L, 54L, 52L),
+  History = c(47L, 55L, 44L, 23L, 48L, 63L, 39L, 47L, 48L, 48L)
+)
+classes
+```
+
+## Lengthening data
+
+We can use `pivot_longer()` to convert this to the long format. We have to tell it which columns we are working with in the current data frame, and what the names of the resulting columns in the new one should be.
+
+```{r}
+classes_long <- classes |> 
+  pivot_longer(cols = 2:3, values_to = "Mark", names_to = "Class")
+classes_long
+```
+
+**Explanation:**
+
+- `cols`: Specifies the columns to reshape (in this case, the 2nd and 3rd column).
+- `names_to`: The name of the new column where the existing column names will be stored (`"Class"`).
+- `values_to`: The name of the new column where the values will be stored (`"Mark"`).
+
+## Widening data
+
+Now, how to go back? We can use `pivot_wider()`, as you might expect, only we have to say where the values and names come from.
+
+```{r}
+classes_long |> 
+  pivot_wider(values_from = "Mark", names_from = "Class")
+```
+
+**Explanation:**
+
+- `names_from`: Specifies the column to use for the new column names (`"Class"`).
+- `values_from`: Specifies the column to use for the new column values (`"Mark"`).
+
+These two pivot functions can be really useful, but I also find them tricky to work with, both conceptually and practically. You will surely run into trouble using them in other cases, and when you do, don’t panic! Use the help documentation in R, and experiment with the code until you get it. Googling or using AI tools like ChatGPT can help a lot. To be honest, I still have to check the documentation almost every time I try to use one of these on a new dataset.
+
+

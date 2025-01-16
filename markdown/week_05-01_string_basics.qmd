@@ -1,0 +1,231 @@
+---
+title: "String basics"
+subtitle: "Data Skills for the Digital World: Week 5" 
+author: "Jason Grafmiller<br>[j.grafmiller@bham.ac.uk](mailto:j.grafmiller@bham.ac.uk)"
+date: "Last updated: `r format(Sys.Date(), '%d %B %Y')`"
+format:
+  html: 
+    toc: true
+    toc-location: left
+    theme: 
+      light: flatly
+      dark: darkly
+    mainfont: 'Roboto'
+    fontsize: 100%
+    df-print: paged
+    code-copy: true
+    code-tools:
+      source: true
+      toggle: true
+      caption: "code"
+    css: "styles/custom_bib.css"
+    include-in-header: "styles/roboto_serif.html"
+    include-after-body: "styles/footer.html"
+    embed-resources: true
+knitr:
+  opts_chunk: 
+    # cache.path: "../cache/"
+    # fig.path: "../figures/"
+    comment: "#>"
+    tidy: styler
+execute:
+  echo: true
+  warning: false
+  message: false
+  cache: false
+tbl-cap-location: top
+fig-cap-location: bottom
+filters:
+  - lightbox
+lightbox: auto
+bibliography: [references.bib, data_skills_refs.bib]
+link-citations: true
+csl: unified-style-linguistics.csl
+---
+
+# What Are Strings?
+
+When you're workign with text data, a big part of what you're doing will be manipulating strings of characters. As we've seen **strings** are just programmer-speak sequences of alpha-numeric characters, typically used to represent text. In R, strings are enclosed in either single (`'`) or double (`"`) quotation marks. For example, `"hello"` and `'world'` are both valid strings. 
+
+As part of the tudyverse, the `{stringr}` package in R is a powerful tool for working with text data. It provides a consistent and easy-to-use interface for common string operations. In this file and the next, we will explore some of the most useful functions in the `{stringr}` package. Knowing how to work with strings will be important for doing more sophisticated stuff with text-mining tools like `{tidytext}`, so it's worth a brief detour to cover some basics.
+
+You can download the `{stringr}` cheat sheet here: <https://rstudio.github.io/cheatsheets/strings.pdf> (it's also on Canvas).
+
+
+Let's load our packages. You can just load `{stringr}` or you can load the entire tidyverse
+
+```{r}
+library(here) # for file paths
+library(tidyverse)
+```
+
+Let's load in our baby names data too.
+
+```{r}
+baby_names <- read_csv(here("data", "baby_names_top100_eng_wales.csv"))
+baby_names
+```
+
+# Basic string operations
+
+## `str_length()`: Measure the length of strings
+
+The `str_length()` function calculates the number of characters in each string.
+
+```{r}
+# Example strings
+strings <- c("hello", "world", "R is great!")
+
+# Calculate string lengths
+str_length(strings)
+```
+
+We can use these in a dataframe too.
+
+```{r}
+# get the length of each name
+baby_names |> 
+    mutate(
+        length = str_length(name)
+    ) |> 
+    head() # first six rows
+```
+
+
+
+## `str_detect()`: Detect the presence of patterns
+
+The `str_detect()` function checks if a pattern exists in each string.
+
+```{r}
+# Detect the presence of the letter 'o'
+str_detect(strings, "o")
+
+# Detect the word 'great'
+str_detect(strings, "great")
+```
+
+Look for names starting with "J"
+
+```{r}
+baby_names |> 
+    mutate(
+        starts_with_j = str_detect(name, "J")
+    ) |> 
+    head() # first six rows
+```
+
+## `str_subset()`: Filter strings by pattern
+
+Use `str_subset()` to keep only strings that match a given pattern. So this is like `str_detect()` but it gives only the strings matching the pattern
+
+```{r}
+# Subset strings containing the letter 'o'
+str_subset(strings, "o")
+```
+
+For dataframes we'd use the `filter()` function like so.
+
+```{r}
+baby_names |> 
+    filter(str_detect(name, "J"))
+```
+
+`str_subset()` will give you an error here.
+
+
+## `str_replace()`: Replace patterns in strings
+
+The `str_replace()` function replaces the first occurrence of a pattern with a new value.
+
+```{r}
+# Replace the first 'o' with 'O'
+str_replace(strings, "o", "O")
+
+# Replace 'great' with 'awesome'
+str_replace(strings, "great", "awesome")
+```
+
+`str_replace_all()` replace **all** matches of a pattern
+Unlike `str_replace()`, `str_replace_all()` replaces all occurrences of a pattern.
+
+```{r}
+# Replace all 'o's with 'O'
+str_replace_all(strings, "o", "O")
+```
+
+
+## `str_split()`: Split strings
+
+The `str_split()` function splits strings into pieces based on a specified delimiter.
+
+```{r}
+# Split strings by spaces
+str_split(strings, " ")
+```
+
+## `str_c()`: Concatenate strings
+
+The `str_c()` function combines multiple strings into one.
+
+```{r}
+# Concatenate strings with a space in between
+str_c("hello", "world", sep = " ")
+```
+
+This is similar to the base R `paste()`, which you will see a lot!
+
+```{r}
+paste("hello", "world", sep = " ")
+```
+
+## `str_trim()`: Remove whitespace
+
+The `str_trim()` function removes leading and trailing whitespace from strings. This can be useful for cleaning up texts that you've collected.
+
+```{r}
+# Example with extra spaces
+messy_string <- "  Hello World!  "
+
+# Trim whitespace
+str_trim(messy_string)
+```
+
+
+# Changing case 
+
+There are several functions form changing the case of a string, which can be useful at times.
+
+- `str_to_upper()`: Changes all to uppercase.
+
+```{r}
+str_to_upper("here is a string")
+```
+
+- `str_to_lower()`: Changes all to lowercase
+
+```{r}
+str_to_lower("R is AMAZING!!")
+```
+
+- `str_to_title()`: Changes all to title case
+
+```{r}
+str_to_title("R is AMAZING!!")
+```
+
+
+
+# Exercises
+
+1. Create a vector of strings representing your favorite hobbies or interests. Use `str_length()` to find the length of each string.
+2. Use `str_detect()` to check if any of your strings contain the letter "a".
+3. Replace any instances of "fun" in your strings with "exciting" using `str_replace_all()`.
+4. Split one of your strings into individual words using `str_split()`.
+5. Combine multiple strings from your vector into a single sentence using `str_c()`.
+
+This basic introduction should give you a strong foundation for working with string data in R. Play around with the examples and try the exercises to deepen your understanding!
+
+ 
+ 
+

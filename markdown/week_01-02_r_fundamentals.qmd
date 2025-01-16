@@ -1,0 +1,473 @@
+---
+title: "R fundamentals"
+subtitle: "Data Skills for the Digital World: Week 1" 
+author: "Jason Grafmiller<br>[j.grafmiller@bham.ac.uk](mailto:j.grafmiller@bham.ac.uk)"
+date: "Last updated: `r format(Sys.Date(), '%d %B %Y')`"
+format:
+  html: 
+    toc: true
+    toc-location: left
+    theme: 
+      light: flatly
+      dark: darkly
+    mainfont: 'Roboto'
+    fontsize: 100%
+    df-print: paged
+    code-copy: true
+    code-tools:
+      source: true
+      toggle: true
+      caption: "code"
+    css: "styles/custom_bib.css"
+    include-in-header: "styles/roboto_serif.html"
+    include-after-body: "styles/footer.html"
+    embed-resources: true
+knitr:
+  opts_chunk: 
+    # cache.path: "../cache/"
+    # fig.path: "../figures/"
+    comment: "#>"
+    tidy: styler
+execute:
+  echo: true
+  warning: false
+  message: false
+  cache: false
+tbl-cap-location: top
+fig-cap-location: bottom
+filters:
+  - lightbox
+lightbox: auto
+bibliography: [references.bib, data_skills_refs.bib]
+link-citations: true
+csl: unified-style-linguistics.csl
+---
+
+We're going to begin with some very basics. The first thing you'll want to do is open a new **R script** in the Source pane by typing `Ctrl/Cmd + Shift + N`, or going to drop-down menu "File" > "New File" > "R Script". 
+
+We will type our commands into this script, and then send them to the console to be executed with `Ctrl + Enter` (Windows) or `Cmd + Enter` (Mac). All of the code we'll write can be entered into the console directly, but we use a script so that we have a record of everything we do, which we will save for later.
+
+## R as calculator
+
+R can be used to do some basic calculations:
+
+```{r}
+# addition
+3 + 4
+```
+
+```{r}
+# division and multiplication
+1/200 * 3
+```
+
+```{r}
+# exponentiation
+4^2
+```
+
+R has many built-in **constants** for calculations, e.g. `pi`. In programming, a constant is a named data item whose value cannot be changed.
+
+```{r}
+pi
+```
+Another is `letters`, which is a character vector (more on this later) containing all the letters of the English alphabet.
+
+```{r}
+letters
+```
+
+What do you think `LETTERS` contains? Type it into the console and see.
+
+## Comments
+
+In R, the `#` symbol is a special symbol that denotes a comment. R will ignore any text after `#` for that line. This allows you to write **comments** that are ignored by R but can be read by other humans. Comments are very helpful for providing explanations about what the code does and why we are doing it. You'll notice I use these a lot in my examples!
+
+```{r}
+# This is a comment line. R will not read this as anything
+# Here is another comment line
+letters # here is a comment after some code that R *will* execute
+# Here is a third comment line
+```
+
+
+## Assigning Variables
+
+Variables are one of the fundamental building blocks of many programming languages, including R and Python. A variable is like a tiny container where you store values and data, such as file names, words, numbers, collections of words and numbers, and much more.
+
+A variable will point to a value that you "assign" it. In R you assign a value to a variable with an "assignment operator" `<-`. The `<-` is a pain to type, so RStudio has a keyboard shortcut: `Alt + -` (the minus sign), which I recommend you become very familiar with.
+
+```{r}
+# create a variable "x" that is just a single number
+x <- 5
+# create a variable "me" that is the string "Jason"
+me <- "Jason"
+```
+
+Once you have assigned a variable you can call it by simply typing its name.
+
+```{r}
+x
+```
+Variables will behave just like the object they point to. So variables assigned to numeric values can be used in calculations.
+
+```{r}
+(x + 5)/x^2
+```
+
+Variables assigned to string values can be used with string operations. 
+
+```{r}
+# convert to all upper case
+toupper(me)
+```
+
+But what happens when we try this?
+
+```{r}
+#| eval: false
+toupper(x)
+```
+
+Now what about this?
+
+```{r}
+#| eval: false
+me + 3
+```
+
+Or this?
+
+```{r}
+#| eval: false
+toupper(x) + 3
+```
+
+We'll come back to this in @sec-objects, but first a quick detour.
+
+
+## Functions
+
+Much of the work done in R (and other languages) involves **functions**, which take some input and carry out some process or perform some set of operations to (usually) return some output. In R, functions take the form `function(arg1, arg2, ...)`, where `arg1` represents a function **argument**. Arguments are the inputs to the function.    
+
+For example, the `tolower()` function takes a string input and converts it to all lowercase.
+
+```{r}
+tolower("ALL CAPS!")
+```
+
+The `sum()` function can take several numbers and returns the sum (naturally) of those numbers.
+
+```{r}
+sum(2, 5, 188, 3)
+```
+
+Just as R allows us to put multiple operations together into a longer command (like `1 + 2 * 4` for instance), it also lets us put functions together and even combine functions with operators if we so desire. For instance, `length()` calculates the number of elements in an object, and we can do arithmetic on the output of that function.
+
+```{r}
+length(letters)
+```
+
+We can embed this inside the square root function `sqrt()`.
+
+```{r}
+sqrt(length(letters) - 1)
+```
+
+Most R functions use **argument names** to to helpo keep track of which arguments do what in the function. For the `round()` function, for example, the number that needs to be rounded is specified using the `x` argument, and the number of decimal points that you want it rounded to is specified using the `digits` argument:
+
+```{r}
+round(x = 3.141593, digits = 2)
+```
+
+Lastly, not all functions require arguments.
+
+```{r}
+date()
+```
+
+## Help documentation
+
+You can find out how a function works by looking at the function's **documentation file** with `?<function>` or `help("<function>")`. 
+
+```{r}
+#| eval: FALSE
+?round
+```
+
+Functions with named arguments often have **default values** for those arguments. Arguments with default values will have the form `argument = value`. Default values are used to help simplify coding. You don't need to declare these arguments unless you want to change the default setting. For example, the default value for `digits` in the `round()` function is 0, so if you decide not to specify a value for `digits` then R will act as if you had typed `digits = 0`.
+
+```{r}
+round(3.141593)
+```
+
+
+The function documentation will lay out all the arguments and their default values (if they have any), along with additional details. It will also tell you what the function returns (under "Value"). Finally, the documentation will give you examples of how to use the function. 
+
+For example, we can get the documentation for the `read.csv()` function like so:
+
+```{r}
+#| eval: false
+?read.csv
+# or
+help("read.csv")
+```
+
+Part of the documentation looks like this:
+
+```{r}
+#| eval: false
+read.csv(file, header = TRUE, sep = ",", quote = "\"",
+         dec = ".", fill = TRUE, comment.char = "", ...)
+```
+
+There's a lot going on here, but we'll just focus on one bit. In a nutshell, the `read.csv()` function reads a comma-separated `.csv` data file into R (more on this later). The first argument is `file`, which is "the name of the file which the data are to be read from". This does not have a default value, so that means we must provide some file name for this function. The next argument is `header = TRUE`, which is "a logical value indicating whether the file contains the names of the variables as its first line." This *does* have a default value, so unless we tell it otherwise, the function assumes that the file has a header row. 
+
+We won't worry about the rest of the arguments for now, but notice that aside from `file`, they all have default values specified. All *we* really need to include then is the file path to the file we want to read. So normally you'd just type the code below, which tells R to treat the first line/row in your file as the headers of your columns in a `.csv` spreadsheet.
+
+```{r}
+#| eval: false
+read.csv("some_file_with_headers.csv")
+```
+
+But if you *don't* want R to do this, you can set `header = FALSE`: 
+
+```{r}
+#| eval: false
+read.csv("some_file_without_headers.csv", header = FALSE)
+```
+
+
+
+
+
+## Objects and data types {#sec-objects}
+
+Let's go back the errors we got above:
+
+```{r}
+#| error: true
+me + 3
+```
+
+```{r}
+#| error: true
+toupper(x) + 3
+```
+
+The errors we get from trying the code above come from the fact that objects in R have specific **types**, and certain things can or cannot be done with objects of incompatible types. Naturally we can't do arithmetic with characters (strings), and when we try to apply a function like `toupper()` to a number, R seems to convert the number to a character. So when things go wrong for you---and they *will* go wrong---knowing a bit about object types in R will help you understand the error messages you get, and hopefully fix the problem.
+
+Basic objects in R can be sorted into the following types, also called "classes" in R:
+
+| Class | Description | Example |
+|:---|:---|:---|
+| `numeric` | Numbers with decimals, a.k.a. "double" or "float" | `10.5`, `55`, `787`, `3.141592654` |
+| `character` | Text, a.k.a. "strings" | `"Jason"`, `"This is a string"`, `"2.717"` |
+| `logical` | True or false, a.k.a. "boolean" | `TRUE`, `FALSE` |
+| `integer` | Number with no decimal | `2`, `24601` |
+| `factor` | Factors are used for categorical variables that have a fixed and known set of possible values. |  |
+
+: Basic object classess in R {#tbl-object-classes tbl-colwidths="[20,40,40]" .striped .hover .table-bordered}
+
+You can see the type or 'class' of any object in R with the `class()` function.
+
+```{r}
+class(2)
+```
+
+```{r}
+class("A")
+```
+
+Two important objects worth saying more about are **character objects (strings)** and **logicals**.
+
+### Character types (strings) {.unnumbered}
+
+A string is an R object that is treated like text, even if it contains a number. A string object has the class `character`. Strings are always enclosed by either single quotation marks `'this is a string'` or double quotation marks `"this is also a string"`.
+
+As we've seen certain functions only work with certain data types. For example, mathematical operations only work on `numeric` objects.
+
+```{r}
+#| error: true
+x + 5
+```
+
+But watch what happens if we use strings:
+
+```{r}
+#| label: bad-string
+#| error: true
+x2 <- "5"
+x2 + 5
+```
+
+We can convert variables to different types with functions such as `as.numeric()` or `as.character()`:
+
+```{r}
+as.numeric(x2)
+```
+
+```{r}
+as.character(x)
+```
+
+```{r}
+as.numeric(x2) + 5
+```
+### Logicals (Booleans) {.unnumbered}
+
+Booleans are used to compare variables, having only the values `TRUE` or `FALSE`. 
+
+```{r}
+# for comparison we use double `==`
+4 == 4
+```
+
+Here I'm asking, “is 4 equal to 4”? In this case, the answer is `TRUE`. But now:
+
+```{r}
+4 == 5
+```
+
+We can store these as variable just like any other class.
+
+```{r}
+y <- 4 == 5
+y
+```
+
+| Operator | Meaning |
+|:----------|:--------|
+| `==` | Equals |
+| `!=` | Does not equal |
+| `>` | Greater than |
+| `<` | Less than |
+| `>=` | Greater than or equal to |
+| `<=` | Less than or equal to |
+
+: Logical operators {#tbl-booleans .striped .hover .table-bordered}
+
+Variables can be compared too.
+
+```{r}
+x <- 4
+y <- 6
+x < y
+```
+
+We'll see much more on how logicals are useful when we start working with dataframes. 
+
+## Vectors 
+
+A **vector** is a sequence of data elements of the same basic type, and they are the most basic data structures in R. The variables `x`, `me`, `letters` we've already seen are all in fact examples of vectors. 
+
+To create a vector from scratch we used the function `c()` (for "combine").
+
+```{r}
+# prime numbers up to 50
+primes <- c(2, 3, 5, 7, 11, 13, 17, 19, 23, 29, 31, 37, 41, 43, 47)
+
+# names of characters from "The Office" US
+office_names <- c("Jim", "Pam", "Michael", "Dwight")
+```
+
+Vectors can be of any length, and `length()` will tell us the how many elements we have.
+
+```{r}
+length(primes)
+```
+
+For vectors of only one element, we don't need to use `c()`, but this is still a vector.
+
+```{r}
+me <- "Jason"
+length(me) 
+```
+
+Notice that `"Jason"` is only one element. `length()` does **not** count letters in a character string. It counts unique strings in a character vector. 
+
+```{r}
+length(office_names)
+```
+
+### Numeric vectors {.unnumbered}
+
+We can do lots of things with vectors. Mathematical operations will be applied to each number in a vector, e.g.
+
+```{r}
+# multiple each prime number by 3
+primes * 3
+```
+
+Other functions will work on the vector as a whole. 
+
+```{r}
+# add all numbers up
+sum(primes)
+```
+
+```{r}
+# calculate the mean (average)
+mean(primes)
+```
+
+We'll see more of these functions later on.
+
+
+### Character vectors {.unnumbered}
+
+Character vectors are vectors where each element is a string. As with numeric vectors, there are functions that work on character vectors. E.g. `toupper()` will convert each name to upper case.
+
+```{r}
+toupper(office_names)
+```
+
+Any vector can be sorted with `sort()` or reversed with `rev()`
+
+```{r}
+# reverse the order
+rev(primes)
+rev(office_names)
+```
+
+```{r}
+# sort the values. For strings it sorts alphabetically
+sort(office_names)
+```
+### Vector coercion {.unnumbered}
+
+It's important to remember that each element in a vector must have the **same type**. If you mix types in a vector, R will *coerce* all the elements to either a numeric or character type.
+
+If a vector has a single character element, R makes everything a **character** (note the quotes indicating a string):
+
+```{r}
+c(1, 2, "3")
+```
+
+```{r}
+c(FALSE, TRUE, "TRUE")
+```
+
+If a vector has numeric and logical elements, R makes everything a **number**:
+
+```{r}
+c(1, 2, TRUE, FALSE)
+```
+
+## Other data structures
+
+R has many more objects that can store data in R. The most relevant basic data structures to be familiar with in R are:
+
+| Structure | Description | Dimensions |
+|:---|:---|:---:|
+| `list` | Similar to a vector, however, an element of a list can be an object of any type and structure, including other lists, arrays, data frames, etc. Consequently, lists can be used to construct data structures of considerable complexity. | 1 |
+| `matrix` | A 2-dimensional structure, with rows and columns, where all the elements must be of the same data type. | 2 |
+| `data.frame` | A 2-dimensional version of a list. Like a matrix that can have columns of different data types  | 2 |
+| `array` | Similar to a matrix, but can be any number of dimensions (a matrix is essentially a 2D array) | *n* |
+
+: Key data structures used in R {#tbl-data-structures tbl-colwidths="[20,65,15]" .striped .hover .table-bordered}
+
+We'll look at some of these more as we go. Dataframes are especially important and we'll get into those next time.
+
+
+
