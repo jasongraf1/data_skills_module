@@ -110,5 +110,7 @@ For a Mac user, this might look like so:
 UNIX-based operating systems, such as Linux or Mac OS, use the forward slash (`/`) as the path separator, but Windows uses the back slash (`\`). This is mainly for historical reasons. The two systems developed independently, but in the 1990s the rise of the internet forced software developers to find a compromise. UNIX got there first, and since the back slash is used for other purposes in UNIX systems (we'll see how later on), Windows has adapted to allow both `/` or `\` for its own path names. To avoid confusion, we'll always use `/` here for file paths.  
 :::
 
-The path above is an example of an **absolute file path**. Absolute paths specify the location of a file from the root directory in the file system structure. **Relative file paths**, on the other hand specify the location of a file *relative to some directory*. This is perhaps easier to understand if we first talk about **working directories**.
+The path above is an example of an **absolute file path**. Absolute paths specify the location of a file from the root directory in the file system structure. **Relative file paths**, on the other hand specify the location of a file *relative to some directory*. This is perhaps easier to understand if we first talk about **working directories**. 
+
+In the next file we'll look at working directories and RStudio projects, which are *very* useful for keeping organized. 
 
