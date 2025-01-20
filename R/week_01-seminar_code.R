@@ -90,8 +90,13 @@ mean(my_dataframe$Ages)
  
 # A comfortable theme reduces eye strain and makes it easier to spot errors. 
 
+# Do the following:
+
 # - Go to "Tools" > "Global Options" > "Appearance"
-# - Choose a font size and theme (light or dark mode) that is easy on your eyes.
+# - Choose a font size and theme (light or dark mode) that is easy on your eyes
+# - Click "Apply"
+
+
 
 # Next let's arrange our panels in a useful way. For example, I prefer to have 
 # my scripts (Source pane) on one side, and the actual R console and 
@@ -99,11 +104,24 @@ mean(my_dataframe$Ages)
 # where I do most of the work), since modern screens are much wider than they are
 # tall.
 
-# - Go to "Tools" > "Global Options" > "Pane Layout "
-# - Explore different options for organizing your Source, Console, and Environment panes
+# Do the following:
 
-# b) Use the "Environment" tab to explore the objects you've created in Exercise 1:
-# `my_variable` and `my_dataframe`
+# - Go to "Tools" > "Global Options" > "Pane Layout"
+# - Explore different options for organizing your Source, Console, and Environment panes
+# - Click "Apply"
+
+
+# Finally, do the following:
+
+# - Go to "Tools" > "Global Options" > "General"
+# - UNcheck the box that says "Restore .RData ito workspace at startup"
+# - Set "Save workspace to .RData on exit" to "Never"
+# - Click "Apply"
+
+
+
+# b) Use the "Environment" tab to explore the objects you've created in 
+# Exercise 1: `my_variable` and `my_dataframe`
 
 
 # c) Keyboard shortcuts for efficiency
@@ -115,21 +133,23 @@ mean(my_dataframe$Ages)
 
 # You may know some common ones used by many applications already, e.g. 
 # (Mac users replace Ctrl with Cmd)
-# - Ctrl + C = copy
-# - Ctrl + V = paste
-# - Ctrl + X = cut
-# - Ctrl + Z = undo last edit
+# Ctrl + C = copy
+# Ctrl + V = paste
+# Ctrl + X = cut
+# Ctrl + Z = undo last edit
 
-# - Ctrl + S = save current file
-# - Ctrl + O = open file
+# Ctrl + S = save current file
+# Ctrl + O = open file
 
 
 # We've already seen some RStudio specific ones too:
+
 # Ctrl + Enter = executes code in the Source pane
 # Ctrl + Shift + F10 = restart R session
 # Ctrl + Shift + N = open new R script
 
-# Type the following commands to see what they do:
+# Type the following commands to see what they do (don't type the quotes, I've
+# just added them to note that these are keys to type):
 
 # Ctrl + Shift + C
 # Alt + '-'
@@ -139,9 +159,12 @@ mean(my_dataframe$Ages)
 # Ctrl + '+'
 
 
+# d) Installing and Managing Packages
 
+# Use the "Packages" Tab to search for the `stats` package. 
 
-
+# Click "Install" to open the install packages window. Type "ggplot2" and click
+# "Install" (only if you are on your own computer)
 
 
 
