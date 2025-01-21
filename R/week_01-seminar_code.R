@@ -16,34 +16,45 @@
 
 # When your code breaks, which it will, DON'T PANIC!
 
-# Mistakes are normal and a crucial part of learning! Key steps to debugging:
-# - read the error message carefully.
-# - check your code line by line.
-# - use `help()` or search online for clarification.
-# - isolate problematic sections of the code.
+# Mistakes are normal and a crucial part of learning! 
+# Key steps to debugging:
+# - read the error message carefully
+# - check your code line by line
+# - use `help()` or search online for clarification
+# - isolate problematic sections of the code
+# - search online if all else fails. 
+
+# Here is a detailed list of common errors and solutions: 
+# <https://statsandr.com/blog/top-10-errors-in-r/>
 
 
-# a) Syntax errors (this will happen ALL the time!)
+## a) Syntax errors and typos (this will happen ALL the time!) ------------
  
 # Why does this code not work?
 my_variable <- 10
 my_varaible
 
+
 # Why does this code not work?
-print("Hello, world!"
+print("Hello, world!"))
 
 
 # Why does this code not work?
-sumary(mtcars)
+sum(2 3)
+
+
+# What happens with this code?
+print(("Hello, world!")
+      
       
 
-# b) "Object Not Found" 
+## b) "Object not found" -----------------------------
 
 # Why does this code not work?
 print(my_name)
 
 
-# c) Incorrect Data Type
+## c) Incorrect data type -----------------------------
 
 # Why does this code not work?
 sum("Hello, World!")
@@ -51,28 +62,38 @@ sum("Hello, World!")
 # How do you find the type or class of an object in R?
 
 
-# d) Package Not Loaded
+## d) Could not find function -----------------------------
+
+# Why does this code not work?
+my_function("Jason")
 
 # Why does this code not work?
 ggplot(data = mtcars, aes(x = mpg, y = wt)) + 
   geom_point()
 
 
-# e) Debugging practice. 
+
+## e) Debugging practice -----------------------------
 
 # Find the error in the code below and fix it
 my_data <- c(1, 2, 3, 4, 5)
 sum_data <- sum(mydata)
 print(sum_data)
 
+
 # Find the error in the code below and fix it
 my_dataframe <- data.frame(
-  names = c("Alice", "Bob", "Carla", "Dennis"),
+  names = c("Alice", "Bob", "Carla", "Dennis")
   ages = c(25, 30, 35, 50)
 )
+
+
+# Find the error in the code below and fix it
 mean(my_dataframe$Ages)
 
-# f) Using the `help()` documentation.
+
+
+## f) Using the `help()` documentation -----------------------------
 
 # Find out what the following functions do:
 # `round`, `tolower`, `paste`, `write.csv`
@@ -86,7 +107,7 @@ mean(my_dataframe$Ages)
 # beginner-friendly settings and features.
   
 
-# a) Change appearance and layout
+## a) Change appearance and layout -----------------------------
  
 # A comfortable theme reduces eye strain and makes it easier to spot errors. 
 
@@ -120,11 +141,13 @@ mean(my_dataframe$Ages)
 
 
 
-# b) Use the "Environment" tab to explore the objects you've created in 
-# Exercise 1: `my_variable` and `my_dataframe`
+## b) Environments -----------------------------
+ 
+# Use the "Environment" tab to explore the objects you've created in Exercise 1:
+# `my_variable` and `my_dataframe`
 
 
-# c) Keyboard shortcuts for efficiency
+## c) Keyboard shortcuts for efficiency -----------------------------
 
 # Keyboard shortcuts save time and make coding smoother. Try to keep your 
 # hands on your keyboard as much as possible by using these. You will hopefully
@@ -159,19 +182,23 @@ mean(my_dataframe$Ages)
 # Ctrl + '+'
 
 
-# d) Installing and Managing Packages
+## d) Installing and managing packages -----------------------------
 
 # Use the "Packages" Tab to search for the `stats` package. 
 
 # Click "Install" to open the install packages window. Type "ggplot2" and click
-# "Install" (only if you are on your own computer)
+# "Install" 
 
+# Alternatively, go to the top menu "Tools" > "Install Packages..."
 
+# Once you've installed ggplot2 enter the following:
+ggplot(data = mtcars, aes(x = wt, y = mpg)) +
+  geom_point()
 
+# What error do you see?
 
-
-
-
+# Now add a line containing `library(ggplot2)` above the previous code and run 
+# all 3 lines. 
 
 
 
