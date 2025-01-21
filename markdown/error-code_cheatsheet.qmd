@@ -1,0 +1,115 @@
+---
+title: "R Error Message Cheat Sheet"
+author: ""
+format: 
+  docx:
+    reference-doc: handout_template.docx
+    number-sections: true
+knitr:
+  opts_chunk: 
+    comment: "#>"
+    tidy: styler
+execute:
+  echo: true
+  warning: false
+  message: false
+  cache: false
+  error: true
+---
+
+# Missing objects in R
+
+You type the following and get this message:
+
+```{r}
+foo
+```
+This means you tried to access a variable that doesn’t exist. To fix this, **check the spelling** (typos are *very* easy to miss), and **make sure the object already exists** in the R environment.
+
+# Missing functions
+
+You type the following and get this message:
+
+```{r}
+foo(42)
+```
+
+This means you tried to access a function `foo()` that doesn’t exist. To fix this, **check the spelling**, and 
+make sure you have loaded the necessary **library** that provides the function. E.g. you must run `library(ggplot2)` before running `ggplot()`.
+
+# Missing files / Cannot open connection
+
+You type the following and get this message:
+
+```{r}
+my_data <- read.csv("my_awesome_dataset.csv")
+```
+
+This means R cannot find your file. To fix this, **check the spelling**, check whether the file exists at all, and make sure you specified the **correct file path** to the file. For instance, suppose it is inside a `data` folder, in which case you need to type `read.csv("data/my_awesome_dataset.csv")`.
+
+# Missing or unused arguments
+
+You type the following and get this message:
+
+```{r}
+mean()
+```
+
+To fix this, make sure you supply all the necessary arguments. Alternatively, if you include an argument that is not used, you may get the following error, which you can fix by just deleting the argument:
+
+```{r}
+date(year = 2025)
+```
+
+
+
+# Unexpected items
+
+You type the following and get this message:
+
+```{r}
+print("Hello World!"))
+```
+
+There is an extra end  bracket/parenthesis in your line (This is *very* common). To fix, simply remove the extra `)`.
+
+You type the following and get this message:
+
+```{r}
+sum(x y)
+```
+
+This typically results from a syntax error, such as a missing comma, parenthesis, or operator. To fix, check your syntax for **missing commas**, missing operators (e.g. `=`), or unfinished brackets.
+
+# Invalid data type
+
+You type the following and get this message:
+
+```{r}
+sum("42")
+```
+
+This tells you that the argument `"42"` is not of the correct type for the input to the function `sum()`. To fix, make sure that your argument is of the correct type for your function. You can find the type of an object with `class()`.
+
+```{r}
+class("42") # this is not the correct type
+```
+
+```{r}
+class(42) # this is
+```
+
+
+# Unfinished code
+
+You type `print(("Hello, world!")` and get a `+`:
+
+```
++ 
+```
+
+This means the previous statement is unfinished. To fix, hit the Esc key in the console to cancel this line, then find the problem with your previous line(s).
+
+
+
+
