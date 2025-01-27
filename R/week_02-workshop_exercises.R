@@ -112,10 +112,65 @@
 
 
 
+# Counting ----------------------------------------------------------------
+
+# Let's count the number of times each name occurs in our data:
+
+
+
+# Let's count the number of times each name occurs and sort by the count (`n`):
+
+
+
 
 # Pivoting ----------------------------------------------------------------
 
-# Let's see how to pivot data from wide to long and long to wide
+# Let's see how to pivot data from wide to long and long to wide. 
 
+# Let's look at the `uk_accents_sharma_et_al.csv` dataset. 
+# 
+# This is from a study in which 821 British participants were asked to rate 38 
+# English accents for prestige and attractiveness on a scale from 1 (very low) 
+# to 7 (very high)
+
+# Load in the dataset as `sharma_accents` and inspect it (did it load correctly? how many rows and
+# columns does it have? what is in those columns?) 
+
+
+# Is this a "long" or "wide" tibble/dataframe? What does each row represent? 
+# Does a row represent a single observation?
+
+
+## Pivoting from wide to long --------------------------------
+
+# We want to pivot the tibble so that we have two new but different columns: 
+# - one column whose values are the traits (attractiveness and prestige) being
+# evaluated
+# - one column whose values are the ratings  
+
+# We use `pivot_longer()`:
+
+
+
+## Pivoting from long to wide --------------------------------
+
+# Let's pivot back to the wide format using `pivot_wider()`:
+
+
+
+
+# Question: Which version do you find easier to read and comprehend?
+
+
+
+
+
+
+
+# References --------------------------------------------------------------
+
+# Sharma, D., Levon, E. and Ye, Y. (2022). 50 years of British accent bias: 
+# Stability and lifespan change in attitudes to accents. English World-Wide. 
+# A Journal of Varieties of English. doi:10.1075/eww.20010.sha.
 
 
