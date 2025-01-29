@@ -20,9 +20,17 @@
 # by scraping from the published paper (they did not publish their data or analysis
 # code as far as I am aware).  
 
-# Tip: type "Cmd/Ctrl+Shift+R" to add sections to R scripts 
+# Helpful Keyboard shortcuts:
+# - type "Alt+-" to insert the assignment arrow `<-` 
+
+# - type "Cmd/Ctrl+Shift+M" to insert the pipe `|>` 
+
+# - type "Cmd/Ctrl+Shift+R" to add sections to R scripts 
+
 
 # Libraries ---------------------------------------------------------------
+
+# Load in the `here` and `tidyverse` library:
 
 
 
