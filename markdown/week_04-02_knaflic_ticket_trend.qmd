@@ -46,11 +46,17 @@ csl: unified-style-linguistics.csl
 
 This example is taken from @knaflic_storytelling_2015. The data we're going to analyze comes from a ticket office, and we're looking at how many tickets were received, in comparison to how many tickets were successfully processed.
 
-In May, two employees quit the office. The data analyst who worked on this data has a simple message to tell the employers: "since these employees left in May, the office has fallen behind in processing tickets." This is a call for action to hire two new employees.
+In May, two employees quit the office. The data analyst who worked on this data has a simple message to tell the employers: "since these employees left in May, the office has fallen behind in processing tickets." This is a call for action to hire two new employees. On page 4, Knafflic shows two versions of the same data. The first version (@fig-knafflic1) shows a visualisation of made before thinking carefully about how to tell the "story" of the data.
 
-In this context, **everything in the plot should be geared to distilling this core message**. The goal is not just to show some data, but to drive data-driven decision making. The fact that after May, the ticket office fell behind should be immediately obvious, so that the the decision makers are convinced that two new employees need to be hired.
+![(before) showing data](../images/knafflic_fig-02.png){#fig-knafflic1 width=80%}
 
-In this file we'll walk through how we could approach our visualisation of the data step by step.
+The second version (@fig-knafflic2) presents the same information in a much more effective way.
+
+![(after) storytelling with data](../images/knafflic_fig-03.png){#fig-knafflic2 width=80%}
+
+The core lesson from this plot (and from Knafflic's entire book) is that **everything in the plot should be geared to distilling the core message**. The goal is not just to show some data, but to drive data-driven decision making. The fact that after May, the ticket office fell behind should be immediately obvious from the plot, so that the the decision makers are convinced that two new employees need to be hired.
+
+In this session we'll walk through how we could approach our visualisation of this dataset step by step.
 
 # Setup and overview
 
@@ -64,23 +70,12 @@ library(tidyverse)
 Next, let's load the data. 
 
 ```{r}
-ticket <- read_csv(here('data', 'knaflic_tickets.csv'))
+ticket <- read_csv(here('data', 'knaflic_ticket_trend.csv'))
 ```
 
 Check what's in the data.
 
 ```{r}
-ticket
-```
-
-
-Now we'll put it into long format and clean it up a bit.
-
-```{r}
-ticket <- ticket |> 
-    mutate(month_num = 1:12) |> 
-    pivot_longer(cols = 2:3, names_to = 'type', values_to = "number") |> 
-    mutate(type = str_remove_all(type, 'volume_'))
 ticket
 ```
 
@@ -162,7 +157,7 @@ In line with what we've discussed, let's actually change plot types completely, 
 - First, **bar charts are generally good for categorical differences**, such as the difference between two groups or so. **Lines, on the other hand, cue us into looking for trends**, and that's what we want to show here: the trend of ticket sales.
 - Second, these bar charts add a lot of "non-data ink" in the words of Edward Tufte. At their most basic, these numbers are just points (two numbers for each month), but instead we have huge bars that take up a lot of space that doesn't directly relate to the data... this is partially what's responsible for the impression that the graph is quite cluttered.
 
-# Second ggplot: a line graph
+# Second ggplot: a better line graph
 
 Soooo, lt's make a line graph! For this, we need to switch from `geom_col()` to `geom_line()`. On top of that, because we're now dealing with *line* colors, rather than the *fill* color of bar charts, we need to change `fill = type` to `color = type` (or `col = type`) in the aesthetic mappings. That is, we map the `type` column onto the the `color` aesthetic.
 
@@ -429,10 +424,11 @@ ggplot(data = ticket,
   theme_classic()
 ```
 
-How do I know these color names? You can interrogate the built-in colors using the `colors()` function like this:
+How do I know these color names? You can explore the built-in colors using the `colors()` function like this:
 
 ```{r}
-colors()
+# there are over 650 colors built in... Here are the first 40
+head(colors(), 40)
 ```
 
 Feel free to pick and choose any of these colors to change the plot above.
@@ -514,15 +510,15 @@ ggsave('ticket_sales.pdf',
 
 After exploring a few values, I went with `5.5` for the `width` argument and `3.5` for the `height` argument. This choice is motivated for several reasons: First, because there's a legend on the right-hand side of this plot, we need to make sure that the plot is wide enough. Second, our brain's visual system generally finds things more appealing when they are more horizontally extended, which is also why screens are generally wider than taller, as in the cinema. All sorts of images and videos on computer screens also have a tendency to be relatively wider than higher. I generally strive for an "aspect ratio" of at least 4:3.
 
-# Even better plot
+# Even better plot {#sec-ggplot-version}
 
-Below I've tried to replicate Knaflic's Figure 0.3 on page 4 entirely in R. It involves a bit of extra work, but you can see how it's done if you click "Show the code". It is a fair bit more complex, but it's really just adding layers onto the plot in ways we've already seen (with a few tricks I've picked up along the way). 
+Below I've tried to replicate Knaflic's Figure 0.3 on page 4 entirely in R. It involves a bit of extra work, but you can see how it's done if you click `Show the code`. It is a fair bit more complex, but it's really just adding layers onto the plot in ways we've already seen (with a few tricks I've picked up along the way). I've tried to explain how it works in the comments.
 
 ```{r}
 #| code-fold: true
 #| code-summary: "Show the code"
 
-# I use this package to enable "richtext" geoms, which allow special syntax and 
+# I use `ggtext` to enable "richtext" geoms, which allows special syntax and 
 # even html code to be interpreted for e.g. changing boldface, italics or any
 # other formatting quite easily. 
 library(ggtext)
@@ -534,7 +530,7 @@ ticket <- ticket |>
 
 ggplot(data = ticket, 
        mapping = aes(x = month_num, y = number, col = type)) +
-  xlab('') +
+  xlab('') + # no axis label: it is self-evident from the Month names
   ylab('Number of tickets') +
   scale_y_continuous(limits = c(0, 300), 
                      breaks = seq(0, 300, by = 50), # set break values from 0 to 300 by 50
@@ -544,67 +540,82 @@ ggplot(data = ticket,
                      labels = my_labels,
                      expand = expansion(add = c(0, 2)) # add some padding to the right for the text
                      ) +
-  scale_color_manual(values = c('steelblue4', 'grey40'),
-                     guide = "none", # remove the legend completely
-                     labels = c('tickets processed', 'tickets received')) +
-    # annotate() allows you to put things directly "on top of" your plot. 
-    # These are not mapped to a dataframe, but take aes() values that you input directly.
-    # Here I'm adding a line segment at x = 5, that stretches from y = 0 to y = 250
-    annotate("segment", x = 5, xend = 5, y = 0, yend = 250, color = "grey") +
-    geom_line(linewidth = 1.2) +
-    # here I'm only putting points and text for months Aug or later. I split the
-    # text by type, so I can put values for "Received" above their points, and
-    # values for "Processed" below their points
-      geom_point(
-        data = ticket |> 
-            filter(month_num >= 8),
-        size = 3
-    ) +
-    geom_text(
-        data = ticket |> 
-            filter(month_num >= 8, type == "Received"),
-        mapping = aes(label = number),
-        nudge_y = 20 # nudge up
-    ) +
-    geom_text(
-        data = ticket |> 
-            filter(month_num >= 8, type == "Processed"),
-        mapping = aes(label = number),
-        nudge_y = -20 # nudge down
-    ) +
-    # next I add the type of ticket to the right of the last month's data point
-    geom_text(
-        data = ticket |> 
-            filter(month_num == 12),
-        mapping = aes(label = type), 
-        size = 4,
-        nudge_x = .2, # start the tex a little bit of space to the right of the point
-        hjust = 0 # this left-aligns the text (hjust = 1 is right-aligned)
-        ) +
-    annotate(
-        geom = "richtext", x = 3.5, y = 300, color = "white", text.colour = "grey20",
-        label = "**2 employees quit in May.** We nearly kept up with incoming volume<br>
-            in the following two months, but fell behind with the increase in Aug<br>
-            and haven't been able to catch up since.",
-        hjust = 0, 
-        vjust = 1
-    ) +
+  scale_color_manual(values = c('darkblue', 'grey50'),
+                     guide = "none" # remove the legend completely
+                     ) +
+  # annotate() allows you to put things directly "on top of" your plot. 
+  # These are not mapped to a dataframe, but take aes() values that you input 
+  # directly.
+  # Here I'm adding a vertical line segment at x = 5, that stretches from y = 0 
+  # to y = 250
+  annotate("segment", x = 5, xend = 5, y = 0, yend = 250, color = "grey") +
+  # Now add our trend lines
+  geom_line(linewidth = 1.2) +
+  # Next I'm only putting points and text for months Aug or later.
+  geom_point(
+    data = ticket |> 
+        filter(month_num >= 8),
+    size = 3
+  ) +
+  # Next I split the text by type, so I can put values for "Received" above 
+  # their respective points, and values for "Processed" below their points
+  # Received only
+  geom_text(
+      data = ticket |> 
+          filter(month_num >= 8, type == "Received"),
+      mapping = aes(label = number),
+      nudge_y = 20 # nudge up
+  ) +
+  # Processed only
+  geom_text(
+      data = ticket |> 
+          filter(month_num >= 8, type == "Processed"),
+      mapping = aes(label = number),
+      nudge_y = -20 # nudge down
+  ) +
+  # Next I add text noting the type of ticket to the right of the last month's 
+  # data point
+  geom_text(
+      data = ticket |> 
+          filter(month_num == 12),
+      mapping = aes(label = type), 
+      size = 4,
+      nudge_x = .2, # give a little bit of space to the right of the point
+      hjust = 0 # this left-aligns the text (hjust = 1 equals right-aligned)
+      ) +
+  # Finally, I'll add the chunk of explanatory text above the lines. Here I use 
+  # the "richtext" geom so I can boldface and create line breaks in the text 
+  # with <br>. I had to play around with where to put these to get it to look 
+  # right. Sometimes you just have to experiment!
+  annotate(
+      geom = "richtext", x = 3.5, y = 300, color = "white", text.colour = "grey20",
+      label = "**2 employees quit in May.** We nearly kept up with incoming volume<br>
+          in the following two months, but fell behind with the increase in Aug<br>
+          and haven't been able to catch up since.",
+      hjust = 0, 
+      vjust = 1
+  ) +
+  # Now I add a title and subtitle above, and a caption below.
   labs(
       title = "Please approve the hire of 2 FTEs",
-      subtitle = 'Ticket volume over time'
+      subtitle = 'Ticket volume over time',
+      caption = "Data source: XYZ Dashboard, as of 12/31/2014."
       ) +
-  theme_classic() +
-    # the theme() layer is where you can really tweak the style of every aspect of the plots.
-    # Try `?theme` and see the massive list of things you can style
-    theme(
-        axis.ticks.x = element_blank(), # remove ticks above months
-        axis.title.y = element_text(color = "grey40", hjust = 1), # color and align y axis label to the top
-        plot.title = element_text(size = 20, face = "bold", color = "grey20",
-                                  margin = margin(0,0,10,0)), # add some space below title
-        plot.subtitle = element_text(size = 14, color = "grey20", 
-                                     margin = margin(0,0,10,0)) # add some space below subtitle
-    )
+  theme_classic() + 
+  # the theme() layer is where you can really tweak the style of every aspect 
+  # of the plots.
+  # Try `?theme` and see the massive list of things you can style
+  theme(
+      axis.ticks.x = element_blank(), # remove ticks above months
+      # color and align y axis label to the top
+      axis.title.y = element_text(color = "grey40", hjust = 1), 
+      plot.title = element_text(size = 20, face = "bold", color = "grey20",
+                                margin = margin(0,0,10,0)), # add some space below title
+      plot.subtitle = element_text(size = 14, color = "grey20", 
+                                   margin = margin(0,0,10,0)) # add some space below subtitle
+  )
 ```
 
 Looks pretty good, no?
 
+This may *seem* like a lot of work (and it is) but think about how you'd do this in any other tool---you'd still spend lots of time manually editing colour, axes and labels, adding text, etc. The advantage we have here is that every step is fully documented in the code, such that it can be reproduced precisely by anyone.  

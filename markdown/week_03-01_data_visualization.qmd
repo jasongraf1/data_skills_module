@@ -21,7 +21,7 @@ format:
     css: "styles/custom_bib.css"
     include-in-header: "styles/roboto_serif.html"
     include-after-body: "styles/footer.html"
-    embed-resources: true
+    embed-resources: false
 knitr:
   opts_chunk: 
     # cache.path: "../cache/"
@@ -47,7 +47,7 @@ csl: unified-style-linguistics.csl
 
 ```{r}
 #| echo: false
-source("_common.R")
+# source("_common.R")
 ```
 
 # Preliminaries
@@ -254,9 +254,10 @@ baby_names |>
   theme_minimal()
 ```
 
-You can find the color names R uses here:
+You can find the full color names R uses with `colors()`, and more detailed discussion can be found here: <https://r-graph-gallery.com/42-colors-names.html> 
 
 ```{r}
+# there are LOTS of colour options: 
 colors()
 ```
 
@@ -272,6 +273,8 @@ baby_names |>
   theme_minimal()
 ```
 
+The Brewer scales are automatically included in `{ggplot2}`, and these can be called with `scale_color_brewer()` and `scale_fill_brewer()` 
+
 ```{r}
 baby_names |> 
   filter(name %in% c("Jack", "Oliver", "Harry", "Sophie", "Emily", "Amelia")) |> 
@@ -282,6 +285,7 @@ baby_names |>
   theme_minimal()
 ```
 
+For even more possibilities, the `{paletter}` package has thousands of options: <https://r-graph-gallery.com/package/paletteer.html> 
 
 # Saving plots
 

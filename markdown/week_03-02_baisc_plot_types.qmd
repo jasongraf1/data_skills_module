@@ -21,7 +21,7 @@ format:
     css: "styles/custom_bib.css"
     include-in-header: "styles/roboto_serif.html"
     include-after-body: "styles/footer.html"
-    embed-resources: true
+    embed-resources: false
 knitr:
   opts_chunk: 
     # cache.path: "../cache/"
@@ -94,7 +94,7 @@ ufos |>
     count(day_part)
 ```
 
-We just plot these values like so. We can drop the "NAs" with `na.omit()`.
+We just plot these values like so. We can drop the "NAs" (missing cases) with `na.omit()`.
 
 ```{r}
 ufos |> 
@@ -104,7 +104,7 @@ ufos |>
     geom_col()
 ```
 
-So nighttime seems to be the best time to look for UFOs, which makes sense I guess. You'd think it woudl be easier to see them in the day, but the alien visitors are probably too smart to just fly around when anyone could see them...
+So nighttime seems to be the best time to look for UFOs, which makes sense I guess. You'd think it would be easier to see them in the day, but the alien visitors are probably too smart to just fly around when anyone could see them...
 
 Anyway, we can also use `geom_bar()`, which automatically counts the data for us. Notice in this case, you only need the x variable. The y values are calculated by `geom_bar()`. Personally, I prefer the first method, because it gives me more control over what is happening.       
 
@@ -117,15 +117,17 @@ ufos |>
 
 ### Sorting bars
 
-Look how the bars are sorted. You can kind of see that they are alphabetical, which is the default ordering in ggplot. It's often more helpful to sort the bars in some meaningful order to get your point across. 
+Look how the bars are sorted. You can kind of see that they are alphabetical, which is the default ordering in ggplot. This is fine, but it's often more helpful to **sort the bars in some meaningful order** to get your point across. 
 
-In some cases you might want to sort by the lengths of the bars. This is particularly good for showing rankings and comparing relative values across the categories. The `reorder()` function will do this inside the `aes()` function.
+In some cases you might want to sort by the lengths of the bars. This is particularly good for showing rankings and comparing relative values across the categories. The `reorder()` function will do this inside the `aes()` function.  In the code below, the values on the `x` axis are the output of the whole expression `reorder(day_part, n)`. This is saying: reorder (sort) the values of the `day_part` columns according to their corresponding values in the `n` column, going from smallest to largest, which is the default. 
 
 ```{r}
 ufos |> 
     count(day_part) |> 
     na.omit() |> 
-    ggplot(aes(x = reorder(day_part, n), y = n)) +
+    ggplot(aes(
+      x = reorder(day_part, n), 
+      y = n)) +
     geom_col()
 ```
 
@@ -140,13 +142,13 @@ ufos |>
     labs(x = "Time of day")
 ```
 
-Now, this is good to know, but there are also times where it makes more sense to sort bars according to some natural order. This is the case in our data, where there is a natural progression from one time of day to the next. If you're not familiar with the different kinds of dawn and dusk (I wasn't), you can find a good explanation [here](https://www.timeanddate.com/astronomy/different-types-twilight.html). 
+Now, this is good to know, but there are also times where it makes more sense to sort bars according to some natural order. This is the case in our data, where **there is a natural progression from one time of day to the next**. If you're not familiar with the different kinds of dawn and dusk (I wasn't) you can find a good explanation [here](https://www.timeanddate.com/astronomy/different-types-twilight.html). 
 
 We might want to order the bars according to their natural order: from dawn to morning to afternoon... To do this, we'll need to make use of **factors**, which are a special kind of categorical variable in R (see  for more). In a nutshell, 
 
 > Factors are used for categorical variables, variables that have a fixed and known set of possible values [known as **levels**]. They are also useful when you want to display character vectors in a non-alphabetical order. [Wickham et al. Chapter 16](https://r4ds.hadley.nz/factors.html)
 
-This makes sense for our data. We create factos 
+This makes sense for our data. We create a vector containing the factor levels in the order that we want. Then we mutate this column `day_part` into a factor with `factor()`:  
 
 ```{r}
 day_times <- c("astronomical dawn", "nautical dawn", "civil dawn", "morning", "afternoon", "civil dusk", "nautical dusk", "astronomical dusk", "night")
@@ -166,13 +168,16 @@ ufos |>
     geom_col()
 ```
 
-The neat thing is that you can still override this order if you to sort them by `n`.
+The neat thing is that you can still override this order if you to sort them by `n` as we saw above. So factor orders can be overridden if we like. 
 
 ```{r}
 ufos |> 
     count(day_part) |> 
     na.omit() |> 
-    ggplot(aes(x = reorder(day_part, n, decreasing = TRUE), y = n)) +
+    ggplot(
+      aes(x = reorder(day_part, n, decreasing = TRUE), 
+          y = n)
+      ) +
     geom_col() +
     labs(x = "Time of day")
 ```
@@ -191,7 +196,7 @@ ufos |>
 
 ### Flipping the axes
 
-So there are a lot of things that still need some work. One issue is that the text under the bars is not very readable. We could change the text to abbreviate it, or we could **flip** the axes so that we have horizontal bars. We do this by adding `coord_flip()` (we flip the x and y coordinates) to our ggplot object.
+So there are a lot of things that still need some work. One issue is that the text under the bars is not very readable. We could change the text to abbreviate it, or we could **flip the axes** so that we have horizontal bars. We do this by adding `coord_flip()` (we flip the x and y coordinates) to our ggplot object.
 
 ```{r}
 ufos |> 
@@ -222,7 +227,13 @@ By now you should be starting to see how plotting can take some time to get righ
 
 ### Styling bars
 
-There are many more things we can do, such as change the fill and border colors and the width of the bars, clean up the theme, etc. For example:
+There are many more things we can do, such as change the fill and border colors and the width of the bars, clean up the theme, etc. 
+
+- `colour`: the colour of the bar outline
+- `fill`: the colour of the bars' inside
+- `width`: width of the bars (values between 0 and 1)
+
+For example:
 
 ```{r}
 ufos |> 
@@ -364,7 +375,7 @@ ufos |>
     facet_wrap(~country)
 ```
 
-Ok, but there seem to be *way* more sightings in the USA than in the UK. The difference is so great that we can barely tell anything about the relative frequencies *within* the UK. We can tell ggplot to let the scales of the x axis vary for each subplot.
+Ok, but there seem to be *way* more sightings in the USA than in the UK. The difference is so great that we can barely tell anything about the relative frequencies *within* the UK. We can tell ggplot to let the scales of the x axis vary for each subplot (facet). We do this by including `scales = "free_x"` (or `"free_y"`) inside the `facet_wrap()` layer.
 
 ```{r}
 ufos |> 
@@ -382,7 +393,7 @@ ufos |>
     )
 ```
 
-What's cool is that the relative patterns in the bars seem to be almost identical across the two countries. What we need to be **very careful about** is the fact that **the values on the x axes of the two plots show very different ranges**.
+What's cool is that the relative patterns in the bars seem to be almost identical across the two countries. What we need to be **very careful about** is the fact that **the values on the x axes of the two plots show** ***very*** **different ranges**.
 
 
 
