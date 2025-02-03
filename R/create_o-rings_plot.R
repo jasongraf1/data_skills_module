@@ -6,6 +6,7 @@
 # Create visualisatoin of shuttle O-rings data
 # ----------------------------------------------------------------------------
 
+library(here)
 library(tidyverse)
 library(lemon) # for freshening up ggplots
 
@@ -50,8 +51,26 @@ orings
     )
 )
 
+ggsave(
+  filename = here("images", "orings1.tiff"),
+  device = "tiff",
+  width = 300*6.6,
+  height = 300*3.5,
+  units = "px"
+)
+
+# Add smooth line
 p + 
   geom_smooth(se = F, formula = y ~ x)
+
+ggsave(
+  filename = here("images", "orings2.tiff"),
+  device = "tiff",
+  width = 300*6.6,
+  height = 300*3.5,
+  units = "px"
+)
+
 
 p + # Modify the x and y limits
   geom_smooth(se = F, formula = y ~ x) +
@@ -62,3 +81,11 @@ p + # Modify the x and y limits
   # Add text
   annotate("text", x = 2, y = 3, fontface = "bold", color = "red",
            label = "Forecast \n temperature \n on launch day \n -3° to -1.5° C")
+
+ggsave(
+  filename = here("images", "orings3.tiff"),
+  device = "tiff",
+  width = 300*6.6,
+  height = 300*3.5,
+  units = "px"
+)
