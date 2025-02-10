@@ -8,7 +8,6 @@
 
 library(here)
 library(tidyverse)
-library(lemon) # for freshening up ggplots
 
 theme_set(theme_classic())
 
