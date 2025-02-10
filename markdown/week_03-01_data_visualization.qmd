@@ -21,7 +21,7 @@ format:
     css: "styles/custom_bib.css"
     include-in-header: "styles/roboto_serif.html"
     include-after-body: "styles/footer.html"
-    embed-resources: false
+    embed-resources: true
 knitr:
   opts_chunk: 
     # cache.path: "../cache/"
