@@ -36,7 +36,7 @@
 
 # Data --------------------------------------------------------------------
 
-# load in the `DeWall_et_al_2011_dataset.csv`
+# load in the `DeWall_et_al_2011_dataset.csv` as `dewall`
 
 
 
@@ -68,8 +68,6 @@
 # Let's show the Mean values for each feature as separate columns using 
 # `dewall_simple`
 
-dewall_simple |> 
-  pivot_wider(names_from = "Feature", values_from = "Mean")
 
 
 # Store the output of this as another tibble `dewall_wide`

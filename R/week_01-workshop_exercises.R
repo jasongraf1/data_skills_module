@@ -33,7 +33,6 @@ pi
 
 # Instructions: Create variables to store data and use them in calculations.
 
-
 # a) Assign the value 42 to a variable called `x`.
 x <- 42
 
@@ -54,7 +53,6 @@ my_name <- "Jason"
 # Exercise 3: Basic Functions ---------------------------------------------
 
 # Instructions: Use built-in R functions to perform tasks.
-
 
 # a) Find the square root of 144 with the `sqrt()` function
 sqrt(144)

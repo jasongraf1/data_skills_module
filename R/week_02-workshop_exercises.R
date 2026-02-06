@@ -1,19 +1,19 @@
-# ----------------------------------------------------------------------------
+# -------------------------------------------------------
 # file: week_02-workshop_exercises.R
 # author: Jason Grafmiller
 # date: 2025-01-26
 # description:
 # Exercises for Week 2 workshop. Full code will be posted after class
-# ----------------------------------------------------------------------------
+# -------------------------------------------------------
 
 # Start in a fresh R session in our data_skills project.
 
 
-# Load in the 'here' and 'tidyverse' packages -----------------------------
+# Load in the 'tidyverse' package -----------------------
 
 
 
-# Loading data ------------------------------------------------------------
+# Loading data -------------------------------------------
 
 # Let's load the `baby_names_top100_eng_wales.csv` dataset.
 
@@ -24,7 +24,7 @@
 
 
 
-# Inspect the data --------------------------------------------------------
+# Inspect the data ---------------------------------------
 
 # Let's find the basic dimensions:
 
@@ -43,7 +43,7 @@
 
 
 
-# Selecting specific columns ----------------------------------------------
+# Selecting specific columns -----------------------------
 
 # Let's select only the `year`, `name`, and `rank` columns:
 
@@ -57,14 +57,14 @@
 
 
 
-# Renaming columns --------------------------------------------------------
+# Renaming columns ----------------------------------------
 
 # Let's rename the `n` column as "count"
 
 
 
 
-# Mutating, Adding, and Pulling columns -----------------------------------
+# Mutating, Adding, and Pulling columns ------------------
 
 # Let's `mutate` (transform) our names to all uppercase.
 # We can edit this "in place", that is, change the existing `name` column itself,
@@ -79,8 +79,7 @@
 
 
 
-# Sorting, Slicing, and Filtering data ------------------------------------
-
+# Sorting, Slicing, and Filtering data -------------------
 # Let's sort the data by `name`:
 
 
@@ -112,7 +111,7 @@
 
 
 
-# Counting ----------------------------------------------------------------
+# Counting -----------------------------------------------
 
 # Let's count the number of times each name occurs in our data:
 
@@ -123,7 +122,7 @@
 
 
 
-# Pivoting ----------------------------------------------------------------
+# Pivoting -----------------------------------------------
 
 # Let's see how to pivot data from wide to long and long to wide. 
 
@@ -141,7 +140,7 @@
 # Does a row represent a single observation?
 
 
-## Pivoting from wide to long --------------------------------
+## Pivoting from wide to long ----------------------------
 
 # We want to pivot the tibble so that we have two new but different columns: 
 # - one column whose values are the traits (attractiveness and prestige) being
@@ -152,7 +151,7 @@
 
 
 
-## Pivoting from long to wide --------------------------------
+## Pivoting from long to wide ----------------------------
 
 # Let's pivot back to the wide format using `pivot_wider()`:
 
@@ -167,7 +166,7 @@
 
 
 
-# References --------------------------------------------------------------
+# References ---------------------------------------------
 
 # Sharma, D., Levon, E. and Ye, Y. (2022). 50 years of British accent bias: 
 # Stability and lifespan change in attitudes to accents. English World-Wide. 
