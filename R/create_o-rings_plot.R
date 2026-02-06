@@ -24,7 +24,8 @@ help(orings)
 orings <- orings |> 
   mutate(
     Temp_C = (Temperature - 32) * 5/9,
-    Launch = ifelse(Total == 0, "yes", "no")
+    Launch = ifelse(Total == 0, "yes", "no"),
+    Total = Erosion + Blowby # recalculate the total issues
   )
 
 orings
@@ -99,7 +100,6 @@ ggsave(
   units = "px"
 )
 
-  
 # Add a red rectangle for the forecasted temperature on launch day
 plot0_annotated <- plot0_smooth +
   annotate("rect", xmin = -3.33, xmax = -1.667,  ymin = 0, ymax = 6,
