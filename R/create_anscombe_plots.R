@@ -15,25 +15,25 @@ theme_set(theme_classic())
 p1 <- anscombe |> 
   ggplot(aes(x1, y1)) +
   geom_smooth(method = "lm", se = F, formula = y ~ x) +
-  geom_point(color = "darkorange3", size = 4) +
+  geom_point(color = "darkorange3", size = 3) +
   labs(x = "x", y = "y")
 
 p2 <- anscombe |> 
   ggplot(aes(x2, y2)) +
   geom_smooth(method = "lm", se = F, formula = y ~ x) +
-  geom_point(color = "darkorange3", size = 4) +
+  geom_point(color = "darkorange3", size = 3) +
   labs(x = "x", y = "y")
 
 p3 <- anscombe |> 
   ggplot(aes(x3, y3)) +
   geom_smooth(method = "lm", se = F, formula = y ~ x) +
-  geom_point(color = "darkorange3", size = 4) +
+  geom_point(color = "darkorange3", size = 3) +
   labs(x = "x", y = "y")
 
 p4 <- anscombe |> 
   ggplot(aes(x4, y4)) +
   geom_smooth(method = "lm", se = F, formula = y ~ x) +
-  geom_point(color = "darkorange3", size = 4) +
+  geom_point(color = "darkorange3", size = 3) +
   labs(x = "x", y = "y")
 
 
@@ -41,3 +41,10 @@ p4 <- anscombe |>
 library(patchwork)
 
 (p1 + p2) / (p3 + p4)
+
+ggsave(
+  here("images", "anscombe_plots.svg"),
+  width = 300*5,
+  height = 300*4,
+  units = "px"
+)
