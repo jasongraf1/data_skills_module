@@ -55,6 +55,7 @@ animals |>
   ggplot(aes(body_log10, brain_log10)) +
   geom_point() +
   geom_text_repel(aes(label = animal)) +
+  scale_x_continuous(breaks = -1:5) +
   labs(
     x = "Body mass (log10 scale)",
     y = "Brain mass (log10 scale)",
