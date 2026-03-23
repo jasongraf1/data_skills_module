@@ -3,20 +3,11 @@
 # author: Jason Grafmiller
 # date: 2026-03-13
 # description:
-# 
+# Code for transforming corpus data: normalising and MinMax transforming
 # ---------------------------------------------------------
 
 suppressMessages(library(here)) # for pathing to/from project directory
 suppressMessages(library(tidyverse)) # for dplyr, ggplot, etc.
-suppressMessages(library(janitor)) # for cleaning data
-suppressMessages(library(patchwork)) # combine ggplot objects
-suppressMessages(library(scales)) # for various scales and plot options
-suppressMessages(library(directlabels)) # for apply labels to plots
-suppressMessages(library(ggthemes)) # custom ggplot themes
-suppressMessages(library(ggpubr)) # custom ggplot themes
-suppressMessages(library(ggrepel)) # for labeling points in ggplot
-suppressMessages(library(ggtext)) # for markdown text in ggplot
-suppressMessages(library(lemon)) # for freshening up ggplots
 
 # set theme for plot
 theme_set(theme_classic())
@@ -69,7 +60,6 @@ ggsave(
   units = "px"
 )
 
-
 # PMW frequency counts --------------------------------
 
 nyt |> 
@@ -106,5 +96,12 @@ nyt |>
     panel.background = element_rect(color = "black")
   )
 
+ggsave(
+  file = here("images", "nyt_pmw_counts_no-war.png"),
+  dpi = 300,
+  width = 300*5.8,
+  height = 300*4.6,
+  units = "px"
+)
 
 
